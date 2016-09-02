@@ -1,0 +1,4 @@
+/vendor
+rabbitd.yml
+rabbitd.pid
+rabbitd.log
