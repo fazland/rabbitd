@@ -37,8 +37,22 @@ function findComposer($name)
 $composer = findComposer('composer') or $composer = findComposer('composer.phar');
 exec($composer.' install --no-dev --no-interaction');
 
-$p = new Phar(__DIR__.'/build/rabbitd.phar', FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::KEY_AS_FILENAME, 'rabbitd.phar');
+$file = __DIR__.'/build/rabbitd.phar';
+$p = new Phar($file, FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::KEY_AS_FILENAME, 'rabbitd.phar');
+
+$p->startBuffering();
 $p->buildFromDirectory(__DIR__, '/^.+\.php$/');
 unset($p['build.php']);
 
-$p->setStub(Phar::createDefaultStub('main.php'));
+$stub = <<<EOF
+#!/usr/bin/php
+<?php
+Phar::mapPhar();
+include 'phar://rabbitd.phar/main.php';
+__HALT_COMPILER();
+EOF;
+
+$p->setStub($stub);
+$p->stopBuffering();
+
+chmod($file, 0754);
