@@ -17,6 +17,7 @@
 #        rabbitmq.username: guest
 #        rabbitmq.password: guest
 #        queue.name: task_queue          # Queue name
+#        processes: 1                    # Process count per queue
 
 # Symfony app executable
 #symfony.app: /vagrant/web/app/console

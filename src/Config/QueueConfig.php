@@ -14,7 +14,7 @@ class QueueConfig extends Config
             'rabbitmq.username' => 'guest',
             'rabbitmq.password' => 'guest',
             'queue.name' => 'task_queue',
-            'process_num' => 1,
+            'processes' => 1,
         ]);
     }
 }

@@ -298,7 +298,7 @@ class Application
         foreach ($this->config['queues'] as $name => $options) {
             $config = new QueueConfig($options);
 
-            for ($i = 0; $i < $config['process_num']; ++$i) {
+            for ($i = 0; $i < $config['processes']; ++$i) {
                 $this->children[] = new Child($name, $config, $this);
             }
         }
