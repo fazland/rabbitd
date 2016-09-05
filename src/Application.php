@@ -103,13 +103,25 @@ class Application
         $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
         $this->logger->info('Starting '.$this->currentProcess->getExecutableName().' with PID #'.$this->getProcess()->getPid());
 
+        set_exception_handler(function ($e) {
+            /** @var \Throwable $e */
+            $this->logger->critical('Unhandled exception: '.$e->getMessage());
+            $this->logger->critical('Stack trace');
+            $this->logger->critical($e->getTraceAsString());
+        });
+
         $processUser = posix_getpwuid(posix_getuid());
         $this->logger->debug("Currently executing as '{user}'", ['user' => $processUser['name']]);
 
         $this->installSignalHandlers();
         $this->initQueues();
 
+        $i = 0;
         while ($this->running) {
+            if ($i++ % 10 == 0) {
+                $this->sanityCheck();
+            }
+
             sleep(1);
         }
 
@@ -255,7 +267,7 @@ class Application
         pcntl_signal(SIGTERM, $handler);
         pcntl_signal(SIGHUP, $handler);
 
-        pcntl_signal(SIGCHLD, [$this, 'childTerminated']);
+        pcntl_signal(SIGCHLD, [$this, 'sanityCheck']);
     }
 
     private function signalTermination()
@@ -265,7 +277,7 @@ class Application
         }
     }
 
-    public function childTerminated()
+    public function sanityCheck()
     {
         if (! $this->running) {
             return;
@@ -296,10 +308,10 @@ class Application
     private function initQueues()
     {
         foreach ($this->config['queues'] as $name => $options) {
-            $config = new QueueConfig($options);
+            $config = new QueueConfig($options, $this->config['symfony.app']);
 
             for ($i = 0; $i < $config['processes']; ++$i) {
-                $this->children[] = new Child($name, $config, $this);
+                $this->children[] = new Child($name.' #'.$i, $config, $this);
             }
         }
     }

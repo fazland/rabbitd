@@ -6,6 +6,17 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class QueueConfig extends Config
 {
+    /**
+     * @var string
+     */
+    private $symfonyApp;
+
+    public function __construct(array $config, $symfonyApp)
+    {
+        $this->symfonyApp = $symfonyApp;
+        parent::__construct($config);
+    }
+
     protected function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
@@ -15,6 +26,9 @@ class QueueConfig extends Config
             'rabbitmq.password' => 'guest',
             'queue.name' => 'task_queue',
             'processes' => 1,
+            'symfony.app' => $this->symfonyApp
         ]);
+
+        $resolver->setAllowedTypes('symfony.app', 'string');
     }
 }
