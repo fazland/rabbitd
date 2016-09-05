@@ -193,17 +193,21 @@ class Application
     private function redirectOutputs()
     {
         @mkdir(dirname($this->config['log_file']), 0777, true);
-        $this->output = new StreamOutput(fopen($this->config['log_file'], 'ab'), $this->config['verbosity'], false, $this->outputFormatter);
 
-//        global $STDIN, $STDOUT, $STDERR;
-//
-//        fclose(STDIN);
-//        fclose(STDOUT);
-//        fclose(STDERR);
-//
-//        $STDIN = fopen('/dev/null', 'r');
-//        $STDOUT = fopen('/dev/null', 'w');
-//        $STDERR = $STDOUT;
+        global $STDIN, $STDOUT, $STDERR;
+
+        fclose(STDIN);
+        $STDIN = fopen('/dev/null', 'r');
+
+        fclose(STDOUT);
+        $handle = fopen($this->config['log_file'], 'ab');       // This will be the new stdout since 1 is the lowest free file descriptor
+        $STDOUT = $handle;
+
+        fclose(STDERR);
+        fopen($this->config['log_file'], 'ab');
+        $STDERR = $STDOUT;
+
+        $this->output = new StreamOutput($handle, $this->config['verbosity'], false, $this->outputFormatter);
     }
 
     private function readConfig()
