@@ -1,4 +1,5 @@
 /vendor
+/build
 rabbitd.yml
 rabbitd.pid
 rabbitd.log
