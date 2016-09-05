@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
@@ -49,6 +50,11 @@ class Application
      * @var MasterFormatter
      */
     private $outputFormatter;
+
+    /**
+     * @var OutputInterface
+     */
+    private $output;
 
     /**
      * @var CurrentProcess
@@ -147,16 +153,25 @@ class Application
         $this->logger->info('Finished #'.$this->currentProcess->getPid());
     }
 
+    /**
+     * @return OutputInterface
+     */
     public function getOutput()
     {
         return $this->output;
     }
 
+    /**
+     * @return MasterConfig
+     */
     public function getConfig()
     {
         return $this->config;
     }
 
+    /**
+     * @return Process|CurrentProcess
+     */
     public function getProcess()
     {
         return $this->currentProcess;
@@ -226,26 +241,19 @@ class Application
     {
         $this->logger->debug('Installing signal handlers');
 
-        pcntl_signal(SIGTERM, function () {
+        $handler = function ($signo) {
             if (! $this->running) {
                 return;
             }
 
             $this->running = false;
-            $this->logger->info('Received TERM signal. Stopping loop, process will shutdown after the current job has finished');
+            $this->logger->info('Received '.($signo === SIGTERM ? 'TERM' : 'HUP').' signal. Stopping loop, process will shutdown after the current job has finished');
+            $this->restart = $signo === SIGHUP;
             $this->signalTermination();
-        });
+        };
 
-        pcntl_signal(SIGHUP,  function () {
-            if (! $this->running) {
-                return;
-            }
-
-            $this->running = false;
-            $this->logger->info('Received HUP signal. Stopping loop, process will restart after the current job has finished');
-            $this->restart = true;
-            $this->signalTermination();
-        });
+        pcntl_signal(SIGTERM, $handler);
+        pcntl_signal(SIGHUP, $handler);
 
         pcntl_signal(SIGCHLD, [$this, 'childTerminated']);
     }
