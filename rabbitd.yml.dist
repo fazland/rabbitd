@@ -1,24 +1,24 @@
 # Log filename
-#log_file: /var/log/rabbitd.log
+log_file: /var/log/rabbitd.log
 
 # Set verbosity
 # Could be: quiet, normal, verbose, very_verbose or debug
-#verbosity: very_verbose
+verbosity: very_verbose
 
 # Set PID file
-#pid_file: /var/run/rabbitd.pid
+pid_file: /var/run/rabbitd.pid
 
 # Queues
 # RabbitMQ connection paramters
-#queues:
-#    tasks:
-#        rabbitmq.hostname: localhost
-#        rabbitmq.port: 5672
-#        rabbitmq.username: guest
-#        rabbitmq.password: guest
-#        queue.name: task_queue          # Queue name
-#        processes: 1                    # Process count per queue
+queues:
+    tasks:
+        rabbitmq.hostname: localhost
+        rabbitmq.port: 5672
+        rabbitmq.username: guest
+        rabbitmq.password: guest
+        queue.name: task_queue          # Queue name
+        processes: 1                    # Process count per queue
 
 # Symfony app executable
-#symfony.app: /vagrant/web/app/console
+symfony.app: /vagrant/web/app/console
 

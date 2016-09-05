@@ -6,6 +6,11 @@
             "Fazland\\Rabbitd\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Fazland\\Rabbitd\\Tests\\": "tests/"
+        }
+    },
     "require": {
         "php-amqplib/php-amqplib": "^2.6",
         "psr/log": "*",

@@ -182,7 +182,7 @@ class Application
     }
 
     /**
-     * @return Process|CurrentProcess
+     * @return CurrentProcess
      */
     public function getProcess()
     {
