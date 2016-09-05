@@ -261,6 +261,8 @@ class Application
             $this->running = false;
             $this->logger->info('Received '.($signo === SIGTERM ? 'TERM' : 'HUP').' signal. Stopping loop, process will shutdown after the current job has finished');
             $this->restart = $signo === SIGHUP;
+
+            pcntl_signal(SIGCHLD, SIG_DFL);
             $this->signalTermination();
         };
 
