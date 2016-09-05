@@ -2,24 +2,15 @@
 
 namespace Fazland\Rabbitd\Config;
 
-use Fazland\Rabbitd\Exception\UnknownConfigKeyException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Yaml\Yaml;
 
-class MasterConfig implements \ArrayAccess
+class MasterConfig extends Config
 {
-    /**
-     * @var array
-     */
-    private $config;
-
     public function __construct($filename)
     {
-        $resolver = new OptionsResolver();
-        $this->configureOptions($resolver);
-
         $config = null;
         if (is_readable($filename)) {
             $config = Yaml::parse(@file_get_contents($filename));
@@ -29,10 +20,10 @@ class MasterConfig implements \ArrayAccess
             $config = [];
         }
 
-        $this->config = $resolver->resolve($config);
+        parent::__construct($config);
     }
 
-    private function configureOptions(OptionsResolver $resolver)
+    protected function configureOptions(OptionsResolver $resolver)
     {
         $logDir = isset($_ENV['LOG_DIR']) ? $_ENV['LOG_DIR'] : posix_getcwd().DIRECTORY_SEPARATOR.'logs';
         $pidFile = isset($_ENV['PIDFILE']) ? $_ENV['PIDFILE'] : posix_getcwd().DIRECTORY_SEPARATOR.'rabbitd.pid';
@@ -70,41 +61,5 @@ class MasterConfig implements \ArrayAccess
         $resolver->setAllowedValues('queues', function (array $value) {
             return count($value);
         });
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function offsetExists($offset)
-    {
-        return isset($this->config[$offset]);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function offsetGet($offset)
-    {
-        if (array_key_exists($offset, $this->config)) {
-            return $this->config[$offset];
-        }
-
-        throw new UnknownConfigKeyException("Config key ".$offset." does not exists");
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function offsetSet($offset, $value)
-    {
-        throw new \LogicException("Can't set a config value");
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function offsetUnset($offset)
-    {
-        throw new \LogicException("Can't unset a config value");
     }
 }
