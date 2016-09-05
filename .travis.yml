@@ -1,8 +1,8 @@
 language: php
 
 cache:
-    directories:
-        - $HOME/.composer/cache
+  directories:
+    - $HOME/.composer/cache
 
 php:
   - 5.6
@@ -23,3 +23,18 @@ script:
 after_script:
   - wget https://scrutinizer-ci.com/ocular.phar
   - php ocular.phar code-coverage:upload --format=php-clover coverage.clover
+
+before_deploy:
+  - sh -c 'echo "phar.readonly = 0" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini'
+  - php ./build.php
+
+deploy:
+  provider: releases
+  api_key:
+    secure: FrMUvr013QKio1PHsPuKd9s4uTVhytdgT5A43tHR9A+A8otJwn0RKskbJ4a+Hg/zloskXQh+xJQV/pi1hZ5iCepZJ1JuIayF1djCA/ZWyg6eIfpZ4vNiB2aD7MMx8G5UiKIYyqikgExpyEYnsub2cgeuIDjsynhrPigryM7njSPv2thmj4Uuq0AwYEFEhOWL9h9mkHugadix1Buauz+XMEBfPcM1Hz4ZA9DMWeS3AsG6Hw+G8XmXP9LuwZCAYf+ejwcLZHweT8hWfDz9O9PbihOSITK+jWZB3+jkS+A4XJYZWHqkfULeIG0SCPW/hTE1so6E+xml87qPNmMCAQyxPUs9UOkAaF64osNMH8AdjS85HMeF7GDV62bdqQr8k/VjFkTiwoirqKAV7v566ILgvJ8rt39EXvCr27pcXTc4D/sRPlPG28voJsthIjM1raBdNRrDejPjZm3vOXfaU2ZcNy8NDVAHuZEf9KRfhivTWWXB/Ir5w30x5Iqg23Tb6lq7p1Y2Hr/KMmpgdK3esmdbydLaxms6Wlhi3rnPX5wSePnddSAbyMen5TWioNltDnXr+nAuuS4BYnkxFgHwB7nis3t6+yxo3FuSVGnpgh8EXSuZdDnCzCukH50phRBx3iFVIwPJGkALFk54a4bY/2PYnDNWXTLJCJABgSRi9GimisQ=
+  file: build/rabbitd.phar
+  skip_cleanup: true
+  on:
+    repo: fazland/rabbitd
+    tags: true
+
