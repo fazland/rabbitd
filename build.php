@@ -10,7 +10,7 @@ function findComposer($name)
 {
     if (ini_get('open_basedir')) {
         $searchPath = explode(PATH_SEPARATOR, ini_get('open_basedir'));
-        $dirs = array();
+        $dirs = [];
         foreach ($searchPath as $path) {
             // Silencing against https://bugs.php.net/69240
             if (@is_dir($path)) {
@@ -42,4 +42,3 @@ $p->buildFromDirectory(__DIR__, '/^.+\.php$/');
 unset($p['build.php']);
 
 $p->setStub(Phar::createDefaultStub('main.php'));
-

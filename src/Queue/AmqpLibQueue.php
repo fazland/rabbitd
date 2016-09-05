@@ -84,7 +84,7 @@ class AmqpLibQueue
         $this->channel->basic_qos(null, 1, null);
         $this->channel->basic_consume($this->queue, '', false, false, false, false, [$this, 'processMessage']);
 
-        $this->logger->info("Started. Waiting for jobs...");
+        $this->logger->info('Started. Waiting for jobs...');
         while (! $this->stopped) {
             try {
                 $this->channel->wait(null, true, 1);
@@ -101,7 +101,7 @@ class AmqpLibQueue
 
     public function processMessage(AMQPMessage $msg)
     {
-        $this->logger->debug("Received " . $msg->body);
+        $this->logger->debug('Received '.$msg->body);
 
         $message = unserialize($msg->body);
         if (! $message) {
@@ -120,7 +120,7 @@ class AmqpLibQueue
 
                 default:
                     $this->logger->error("Unknown type '{$message['type']}'");
-                    throw new \Exception("Unknown type received. See log for details");
+                    throw new \Exception('Unknown type received. See log for details');
             }
         }
 
@@ -138,7 +138,7 @@ class AmqpLibQueue
     }
 
     /**
-     * @param boolean $enabled
+     * @param bool $enabled
      */
     public function setEnabled($enabled)
     {
@@ -160,20 +160,20 @@ class AmqpLibQueue
             ->setTimeout(null)
             ->getProcess();
 
-        $this->logger->info('Executing ' . $process->getCommandLine());
+        $this->logger->info('Executing '.$process->getCommandLine());
 
         $process->run(function ($type, $data) {
             $this->logger->debug($data);
         });
 
         if ($process->getExitCode() != 0) {
-            $error = "Process errored [cmd_line: " . $process->getCommandLine() .
-                ", input: " . json_encode($stdin) . "]\n" .
-                "Output: \n" . $process->getOutput() . "\n" .
-                "Error: \n" . $process->getErrorOutput();
+            $error = 'Process errored [cmd_line: '.$process->getCommandLine().
+                ', input: '.json_encode($stdin)."]\n".
+                "Output: \n".$process->getOutput()."\n".
+                "Error: \n".$process->getErrorOutput();
             $this->logger->error($error);
 
-            throw new \Exception("Process errored. See log for details");
+            throw new \Exception('Process errored. See log for details');
         }
     }
 }

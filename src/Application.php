@@ -6,7 +6,6 @@ use Fazland\Rabbitd\Config\MasterConfig;
 use Fazland\Rabbitd\Config\QueueConfig;
 use Fazland\Rabbitd\OutputFormatter\MasterFormatter;
 use Fazland\Rabbitd\Process\CurrentProcess;
-use Fazland\WebsiteBundle\Queue\AmqpLibQueue;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -89,7 +88,6 @@ class Application
         $this->readConfig();
         $this->checkAlreadyInExecution();
     }
-
 
     public function run()
     {
@@ -180,11 +178,15 @@ class Application
         }
 
         // Double fork magic, to prevent deamon to acquire a tty
-        if ($pid = $this->currentProcess->fork()) { exit; }
+        if ($pid = $this->currentProcess->fork()) {
+            exit;
+        }
 
         $this->currentProcess->setSid();
 
-        if ($pid = $this->currentProcess->fork()) { exit; }
+        if ($pid = $this->currentProcess->fork()) {
+            exit;
+        }
 
         file_put_contents($this->config['pid_file'], $this->currentProcess->getPid());
         $this->redirectOutputs();
@@ -213,8 +215,8 @@ class Application
     private function readConfig()
     {
         if (null === ($file = $this->input->getOption('config'))) {
-            $dir = isset($_ENV['CONF_DIR']) ? $_ENV['CONF_DIR'] : posix_getcwd() . DIRECTORY_SEPARATOR . 'conf';
-            $file = $dir . DIRECTORY_SEPARATOR . '/rabbitd.yml';
+            $dir = isset($_ENV['CONF_DIR']) ? $_ENV['CONF_DIR'] : posix_getcwd().DIRECTORY_SEPARATOR.'conf';
+            $file = $dir.DIRECTORY_SEPARATOR.'/rabbitd.yml';
         }
 
         $this->config = new MasterConfig($file);
@@ -222,7 +224,7 @@ class Application
 
     private function installSignalHandlers()
     {
-        $this->logger->debug("Installing signal handlers");
+        $this->logger->debug('Installing signal handlers');
 
         pcntl_signal(SIGTERM, function () {
             if (! $this->running) {
@@ -230,7 +232,7 @@ class Application
             }
 
             $this->running = false;
-            $this->logger->info("Received TERM signal. Stopping loop, process will shutdown after the current job has finished");
+            $this->logger->info('Received TERM signal. Stopping loop, process will shutdown after the current job has finished');
             $this->signalTermination();
         });
 
@@ -240,7 +242,7 @@ class Application
             }
 
             $this->running = false;
-            $this->logger->info("Received HUP signal. Stopping loop, process will restart after the current job has finished");
+            $this->logger->info('Received HUP signal. Stopping loop, process will restart after the current job has finished');
             $this->restart = true;
             $this->signalTermination();
         });
@@ -288,7 +290,7 @@ class Application
         foreach ($this->config['queues'] as $name => $options) {
             $config = new QueueConfig($options);
 
-            for($i = 0; $i < $config['process_num']; $i++) {
+            for ($i = 0; $i < $config['process_num']; ++$i) {
                 $this->children[] = new Child($name, $config, $this);
             }
         }

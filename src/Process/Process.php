@@ -37,7 +37,8 @@ class Process
      */
     public function isAlive()
     {
-        pcntl_waitpid($this->pid, $status, WNOHANG|WUNTRACED);
+        pcntl_waitpid($this->pid, $status, WNOHANG | WUNTRACED);
+
         return ! pcntl_wifstopped($status) && ! pcntl_wifexited($status);
     }
 }

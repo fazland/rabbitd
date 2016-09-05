@@ -67,7 +67,7 @@ class Child
         try {
             $this->queue->runLoop();
         } catch (\Exception $e) {
-            $this->logger->critical("Uncaugth exception ".get_class($e).": ".$e->getMessage());
+            $this->logger->critical('Uncaugth exception '.get_class($e).': '.$e->getMessage());
             $this->logger->critical($e->getTraceAsString());
         }
 

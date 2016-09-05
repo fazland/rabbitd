@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-declare(ticks = 1);
+declare (ticks = 1);
 
 use Fazland\Rabbitd\Application;
 

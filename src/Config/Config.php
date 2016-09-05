@@ -2,7 +2,6 @@
 
 namespace Fazland\Rabbitd\Config;
 
-
 use Fazland\Rabbitd\Exception\UnknownConfigKeyException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -28,7 +27,7 @@ abstract class Config implements \ArrayAccess
     abstract protected function configureOptions(OptionsResolver $resolver);
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function offsetExists($offset)
     {
@@ -36,7 +35,7 @@ abstract class Config implements \ArrayAccess
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function offsetGet($offset)
     {
@@ -44,11 +43,11 @@ abstract class Config implements \ArrayAccess
             return $this->config[$offset];
         }
 
-        throw new UnknownConfigKeyException("Config key ".$offset." does not exists");
+        throw new UnknownConfigKeyException('Config key '.$offset.' does not exists');
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function offsetSet($offset, $value)
     {
@@ -56,7 +55,7 @@ abstract class Config implements \ArrayAccess
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function offsetUnset($offset)
     {
