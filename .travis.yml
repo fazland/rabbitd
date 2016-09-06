@@ -37,4 +37,5 @@ deploy:
   on:
     repo: fazland/rabbitd
     tags: true
+    condition: "$TRAVIS_PHP_VERSION" == "5.6"
 
