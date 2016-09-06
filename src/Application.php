@@ -287,6 +287,7 @@ class Application
 
         foreach ($this->children as $child) {
             if (! $child->getProcess()->isAlive()) {
+                $this->logger->debug('Child "'.$child->getName().'" is dead. Restarting...');
                 $child->restart($this);
             }
         }

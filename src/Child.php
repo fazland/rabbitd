@@ -14,6 +14,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Child
 {
     /**
+     * @var string
+     */
+    private $name;
+
+    /**
      * @var OutputInterface
      */
     private $output;
@@ -40,6 +45,7 @@ class Child
 
     public function __construct($name, QueueConfig $config, Application $master)
     {
+        $this->name = $name;
         $this->output = clone $master->getOutput();
 
         $this->outputFormatter = new ChildFormatter($name);
@@ -102,6 +108,14 @@ class Child
         if (0 === $this->fork($master)) {
             $this->run();
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 
     private function fork(Application $master)
