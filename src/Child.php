@@ -9,6 +9,7 @@ use Fazland\Rabbitd\Process\Process;
 use Fazland\Rabbitd\Queue\AmqpLibQueue;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Child
@@ -43,10 +44,10 @@ class Child
      */
     private $restarts = 0;
 
-    public function __construct($name, QueueConfig $config, Application $master)
+    public function __construct($name, QueueConfig $config, Output $output, Master $master)
     {
         $this->name = $name;
-        $this->output = clone $master->getOutput();
+        $this->output = $output;
 
         $this->outputFormatter = new ChildFormatter($name);
         $this->output->setFormatter($this->outputFormatter);
@@ -89,7 +90,7 @@ class Child
         return $this->process;
     }
 
-    public function restart(Application $master = null)
+    public function restart(Master $master = null)
     {
         if ($this->process instanceof CurrentProcess) {
             die;
@@ -118,9 +119,9 @@ class Child
         return $this->name;
     }
 
-    private function fork(Application $master)
+    private function fork(Master $master)
     {
-        if ($pid = $master->getProcess()->fork()) {
+        if ($pid = $master->fork()) {
             $this->process = new Process($pid);
         } else {
             $this->process = new CurrentProcess();

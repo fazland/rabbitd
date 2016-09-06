@@ -3,8 +3,8 @@
 namespace Fazland\Rabbitd;
 
 use Fazland\Rabbitd\Config\MasterConfig;
-use Fazland\Rabbitd\Config\QueueConfig;
-use Fazland\Rabbitd\OutputFormatter\MasterFormatter;
+use Fazland\Rabbitd\Console\Environment;
+use Fazland\Rabbitd\Exception\RestartException;
 use Fazland\Rabbitd\Process\CurrentProcess;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Process\PhpExecutableFinder;
@@ -32,24 +33,9 @@ class Application
     private $logger;
 
     /**
-     * @var bool
-     */
-    private $restart;
-
-    /**
-     * @var bool
-     */
-    private $running;
-
-    /**
      * @var MasterConfig
      */
     private $config;
-
-    /**
-     * @var MasterFormatter
-     */
-    private $outputFormatter;
 
     /**
      * @var OutputInterface
@@ -62,9 +48,14 @@ class Application
     private $currentProcess;
 
     /**
-     * @var Child[]
+     * @var ErrorHandler
      */
-    private $children;
+    private $errorHandler;
+
+    /**
+     * @var Environment
+     */
+    private $environment;
 
     /**
      * Application constructor.
@@ -78,6 +69,7 @@ class Application
         }
 
         $this->currentProcess = $currentProcess;
+        $this->environment = Environment::createFromGlobal();
 
         try {
             $this->input = new ArgvInput($this->currentProcess->getArgv(), $this->getInputDefinition());
@@ -86,9 +78,7 @@ class Application
             die(3);
         }
 
-        $this->running = false;
-        $this->outputFormatter = new MasterFormatter();
-        $this->output = new StreamOutput(fopen('php://stdout', 'ab'), $this->config['verbosity'], null, $this->outputFormatter);
+        $this->output = new StreamOutput(fopen('php://stdout', 'ab'), Output::VERBOSITY_VERY_VERBOSE);
         $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
 
         $this->readConfig();
@@ -97,96 +87,34 @@ class Application
 
     public function run()
     {
-        $this->running = true;
         $this->deamonize();
+        $master = new Master($this->config, $this->output, $this->currentProcess);
 
-        $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
-        $this->logger->info('Starting '.$this->currentProcess->getExecutableName().' with PID #'.$this->getProcess()->getPid());
+        $this->logger->info('Starting '.$this->currentProcess->getExecutableName().' with PID #'.$this->currentProcess->getPid());
+        $this->errorHandler = new ErrorHandler($this->logger);
 
-        set_exception_handler(function ($e) {
-            /** @var \Throwable $e */
-            $this->logger->critical('Unhandled exception: '.$e->getMessage());
-            $this->logger->critical('Stack trace');
-            $this->logger->critical($e->getTraceAsString());
-        });
-
-        $processUser = posix_getpwuid(posix_getuid());
-        $this->logger->debug("Currently executing as '{user}'", ['user' => $processUser['name']]);
-
-        $this->installSignalHandlers();
-        $this->initQueues();
-
-        $i = 0;
-        while ($this->running) {
-            if ($i++ % 10 == 0) {
-                $this->sanityCheck();
-            }
-
-            sleep(1);
-        }
-
-        $alive = true;
-
-        while ($alive) {
-            $alive = false;
-            foreach ($this->children as $child) {
-                $alive = $alive || $child->getProcess()->isAlive();
-            }
-
-            sleep(1);
-        }
-
-        @unlink($this->config['pid_file']);
-
-        if ($this->restart) {
-            $exec = (new PhpExecutableFinder())->find();
-
-            $cmdline = array_map([ProcessUtils::class, 'escapeArgument'], [$exec, $this->getProcess()->getExecutableName()]);
-            $cmdline[] = (string)$this->input;
-
-            $this->logger->debug('Launching "'.implode(' ', $cmdline));
-
-            $process = new Process(implode(' ', $cmdline));
-            $process
-                ->setEnv($_ENV)
-                ->setTimeout(0)
-                ->start()
-            ;
-
-            $time = 5;
-            while ($time = sleep($time));
-
-            if ($process->getStatus() !== Process::STATUS_STARTED && $process->getExitCode() !== 0) {
-                $this->logger->critical('Cannot restart process: '.$process->getExitCodeText().' ('.$process->getExitCode().')');
-                $this->logger->critical($process->getOutput());
-            }
+        try {
+            $master->run();
+        } catch (RestartException $e) {
+            $this->restart();
         }
 
         $this->logger->info('Finished #'.$this->currentProcess->getPid());
     }
 
-    /**
-     * @return OutputInterface
-     */
-    public function getOutput()
+    private function checkAlreadyInExecution()
     {
-        return $this->output;
-    }
+        $pidFile = $this->config['pid_file'];
+        $pid = file_exists($pidFile) ? (int)file_get_contents($pidFile) : null;
 
-    /**
-     * @return MasterConfig
-     */
-    public function getConfig()
-    {
-        return $this->config;
-    }
+        if (! $pid) {
+            return;
+        }
 
-    /**
-     * @return CurrentProcess
-     */
-    public function getProcess()
-    {
-        return $this->currentProcess;
+        if (posix_kill($pid, 0)) {
+            $this->logger->error("Rabbitd is already running with PID #$pid");
+            die(2);
+        }
     }
 
     private function getInputDefinition()
@@ -236,86 +164,39 @@ class Application
         fopen($this->config['log_file'], 'ab');
         $STDERR = $STDOUT;
 
-        $this->output = new StreamOutput($handle, $this->config['verbosity'], false, $this->outputFormatter);
+        $this->output = new StreamOutput($handle, $this->config['verbosity'], false);
+        $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
     }
 
     private function readConfig()
     {
         if (null === ($file = $this->input->getOption('config'))) {
-            $dir = isset($_ENV['CONF_DIR']) ? $_ENV['CONF_DIR'] : posix_getcwd().DIRECTORY_SEPARATOR.'conf';
+            $dir = $this->environment->get('CONF_DIR', posix_getcwd().DIRECTORY_SEPARATOR.'conf');
             $file = $dir.DIRECTORY_SEPARATOR.'/rabbitd.yml';
         }
 
-        $this->config = new MasterConfig($file);
+        $this->config = new MasterConfig($file, $this->environment);
     }
 
-    private function installSignalHandlers()
+    private function restart()
     {
-        $this->logger->debug('Installing signal handlers');
+        $exec = (new PhpExecutableFinder())->find();
 
-        $handler = function ($signo) {
-            if (! $this->running) {
-                return;
-            }
+        $cmdline = array_map([ProcessUtils::class, 'escapeArgument'], [$exec, $this->currentProcess->getExecutableName()]);
+        $cmdline[] = (string)$this->input;
 
-            $this->running = false;
-            $this->logger->info('Received '.($signo === SIGTERM ? 'TERM' : 'HUP').' signal. Stopping loop, process will shutdown after the current job has finished');
-            $this->restart = $signo === SIGHUP;
+        $this->logger->debug('Launching "'.implode(' ', $cmdline));
 
-            pcntl_signal(SIGCHLD, SIG_DFL);
-            $this->signalTermination();
-        };
+        $commandline = '{ ('.implode(' ', $cmdline).') <&3 3<&- 3>/dev/null & } 3<&0;';
+        exec($commandline, $output, $exitcode);
 
-        pcntl_signal(SIGTERM, $handler);
-        pcntl_signal(SIGHUP, $handler);
+        $time = 5;
+        while ($time = sleep($time));
 
-        pcntl_signal(SIGCHLD, [$this, 'sanityCheck']);
-    }
-
-    private function signalTermination()
-    {
-        foreach ($this->children as $child) {
-            $child->getProcess()->kill(SIGTERM);
-        }
-    }
-
-    public function sanityCheck()
-    {
-        if (! $this->running) {
-            return;
-        }
-
-        foreach ($this->children as $child) {
-            if (! $child->getProcess()->isAlive()) {
-                $this->logger->debug('Child "'.$child->getName().'" is dead. Restarting...');
-                $child->restart($this);
-            }
-        }
-    }
-
-    private function checkAlreadyInExecution()
-    {
-        $pidFile = $this->config['pid_file'];
-        $pid = file_exists($pidFile) ? (int)file_get_contents($pidFile) : null;
-
-        if (! $pid) {
-            return;
-        }
-
-        if (posix_kill($pid, 0)) {
-            $this->logger->error("Rabbitd is already running with PID #$pid");
-            die(2);
-        }
-    }
-
-    private function initQueues()
-    {
-        foreach ($this->config['queues'] as $name => $options) {
-            $config = new QueueConfig($options, $this->config['symfony.app']);
-
-            for ($i = 0; $i < $config['processes']; ++$i) {
-                $this->children[] = new Child($name.' #'.$i, $config, $this);
-            }
+        if ($exitcode !== 0) {
+            $text = isset(Process::$exitCodes[$exitcode]) ? Process::$exitCodes[$exitcode] : 'Unknown error';
+            $this->logger->critical('Cannot restart process: '.$text.' ('.$exitcode.')');
+            $this->logger->critical($output);
         }
     }
 }

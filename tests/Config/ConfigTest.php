@@ -17,7 +17,7 @@ class SubConfig extends Config
         $resolver->setDefaults([
             'default_value' => 'foobar',
             'bar' => 'foo',
-            'fooz' => 'barz'
+            'fooz' => 'barz',
         ]);
     }
 }
@@ -35,7 +35,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
     public function testGet()
     {
         $config = new SubConfig([
-            'bar' => 'baz'
+            'bar' => 'baz',
         ]);
 
         $this->assertEquals('foobar', $config['default_value']);
@@ -54,7 +54,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
     public function testGetDontThrowIfParamIsNull()
     {
         $config = new SubConfig([
-            'fooz' => null
+            'fooz' => null,
         ]);
 
         $this->assertNull($config['fooz']);

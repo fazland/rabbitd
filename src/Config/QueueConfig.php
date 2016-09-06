@@ -26,7 +26,7 @@ class QueueConfig extends Config
             'rabbitmq.password' => 'guest',
             'queue.name' => 'task_queue',
             'processes' => 1,
-            'symfony.app' => $this->symfonyApp
+            'symfony.app' => $this->symfonyApp,
         ]);
 
         $resolver->setAllowedTypes('symfony.app', 'string');

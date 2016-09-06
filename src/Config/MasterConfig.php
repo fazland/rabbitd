@@ -2,6 +2,7 @@
 
 namespace Fazland\Rabbitd\Config;
 
+use Fazland\Rabbitd\Console\Environment;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -9,8 +10,15 @@ use Symfony\Component\Yaml\Yaml;
 
 class MasterConfig extends Config
 {
-    public function __construct($filename)
+    /**
+     * @var Environment
+     */
+    private $environment;
+
+    public function __construct($filename, Environment $environment)
     {
+        $this->environment = $environment;
+
         $config = null;
         if (is_readable($filename)) {
             $config = Yaml::parse(@file_get_contents($filename));
@@ -25,8 +33,9 @@ class MasterConfig extends Config
 
     protected function configureOptions(OptionsResolver $resolver)
     {
-        $logDir = isset($_ENV['LOG_DIR']) ? $_ENV['LOG_DIR'] : posix_getcwd().DIRECTORY_SEPARATOR.'logs';
-        $pidFile = isset($_ENV['PIDFILE']) ? $_ENV['PIDFILE'] : posix_getcwd().DIRECTORY_SEPARATOR.'rabbitd.pid';
+        $logDir = $this->environment->get('LOG_DIR', posix_getcwd().DIRECTORY_SEPARATOR.'logs');
+        $pidFile = $this->environment->get('PIDFILE', posix_getcwd().DIRECTORY_SEPARATOR.'rabbitd.pid');
+
         $resolver->setDefaults([
             'log_file' => $logDir.DIRECTORY_SEPARATOR.'rabbitd.log',
             'verbosity' => 'very_verbose',
