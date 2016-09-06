@@ -52,14 +52,17 @@ class Master
     public function __construct(MasterConfig $config, Output $output, CurrentProcess $currentProcess)
     {
         $this->config = $config;
+
         $this->output = $output;
+        $this->output->setFormatter(new MasterFormatter());
+
         $this->currentProcess = $currentProcess;
     }
 
     public function run()
     {
         $this->running = true;
-        $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment'], new MasterFormatter());
+        $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
 
         $processUser = posix_getpwuid(posix_getuid());
         $this->logger->debug("Currently executing as '{user}'", ['user' => $processUser['name']]);

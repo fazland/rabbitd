@@ -88,7 +88,7 @@ class Application
     public function run()
     {
         $this->deamonize();
-        $master = new Master($this->config, $this->output, $this->currentProcess);
+        $master = new Master($this->config, clone $this->output, $this->currentProcess);
 
         $this->logger->info('Starting '.$this->currentProcess->getExecutableName().' with PID #'.$this->currentProcess->getPid());
         $this->errorHandler = new ErrorHandler($this->logger);
