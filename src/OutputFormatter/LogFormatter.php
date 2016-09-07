@@ -8,7 +8,7 @@ abstract class LogFormatter extends OutputFormatter
 {
     public function format($message)
     {
-        $dt = new \DateTime();
+        $dt = \DateTime::createFromFormat('U', time());
         $message = '['.$dt->format('Y-m-d H:i:s.u').' - '.$this->getName().'] '.$message;
 
         return parent::format($message);
