@@ -44,7 +44,7 @@ class Child
      */
     private $restarts = 0;
 
-    public function __construct($name, QueueConfig $config, Output $output, Master $master)
+    public function __construct($name, QueueConfig $config, OutputInterface $output, Master $master)
     {
         $this->name = $name;
         $this->output = $output;

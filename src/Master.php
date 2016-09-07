@@ -10,7 +10,7 @@ use Fazland\Rabbitd\Process\CurrentProcess;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Logger\ConsoleLogger;
-use Symfony\Component\Console\Output\Output;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class Master
 {
@@ -20,7 +20,7 @@ class Master
     private $config;
 
     /**
-     * @var Output
+     * @var OutputInterface
      */
     private $output;
 
@@ -49,7 +49,7 @@ class Master
      */
     private $currentProcess;
 
-    public function __construct(MasterConfig $config, Output $output, CurrentProcess $currentProcess)
+    public function __construct(MasterConfig $config, OutputInterface $output, CurrentProcess $currentProcess)
     {
         $this->config = $config;
 
