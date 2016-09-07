@@ -88,6 +88,11 @@ class Application
     public function run()
     {
         $this->deamonize();
+
+        $this->currentProcess
+            ->setUser($this->config['master.user'])
+            ->setGroup($this->config['master.group']);
+
         $master = new Master($this->config, clone $this->output, $this->currentProcess);
 
         $this->logger->info('Starting '.$this->currentProcess->getExecutableName().' with PID #'.$this->currentProcess->getPid());

@@ -131,6 +131,10 @@ class Child
             });
             pcntl_signal(SIGHUP, SIG_DFL);
             pcntl_signal(SIGCHLD, SIG_DFL);
+
+            $this->process
+                ->setUser($this->config['worker.user'])
+                ->setGroup($this->config['worker.group']);
         }
 
         return $pid;

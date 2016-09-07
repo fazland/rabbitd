@@ -61,4 +61,22 @@ class CurrentProcess extends Process
     {
         return posix_setsid();
     }
+
+    public function setUser($userName)
+    {
+        if ($userInfo = posix_getpwnam($userName)) {
+            posix_setuid($userInfo['uid']);
+        }
+
+        return $this;
+    }
+
+    public function setGroup($groupName)
+    {
+        if ($groupInfo = posix_getgrnam($groupName)) {
+            posix_setgid($groupInfo['gid']);
+        }
+
+        return $this;
+    }
 }

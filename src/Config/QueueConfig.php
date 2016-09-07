@@ -7,13 +7,13 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class QueueConfig extends Config
 {
     /**
-     * @var string
+     * @var MasterConfig
      */
-    private $symfonyApp;
+    private $masterConfig;
 
-    public function __construct(array $config, $symfonyApp)
+    public function __construct(array $config, MasterConfig $masterConfig)
     {
-        $this->symfonyApp = $symfonyApp;
+        $this->masterConfig = $masterConfig;
         parent::__construct($config);
     }
 
@@ -26,9 +26,13 @@ class QueueConfig extends Config
             'rabbitmq.password' => 'guest',
             'queue.name' => 'task_queue',
             'processes' => 1,
-            'symfony.app' => $this->symfonyApp,
+            'symfony.app' => $this->masterConfig['symfony.app'],
+            'worker.user' => $this->masterConfig['master.user'],
+            'worker.group' => $this->masterConfig['master.group'],
         ]);
 
         $resolver->setAllowedTypes('symfony.app', 'string');
+        $resolver->setAllowedTypes('worker.user', 'string');
+        $resolver->setAllowedTypes('worker.group', 'string');
     }
 }

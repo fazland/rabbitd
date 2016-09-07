@@ -42,9 +42,13 @@ class MasterConfig extends Config
             'pid_file' => $pidFile,
             'queues' => [],
             'symfony.app' => posix_getcwd().DIRECTORY_SEPARATOR.'console',
+            'master.user' => posix_getpwuid(posix_getuid())['name'],
+            'master.group' => posix_getgrgid(posix_getgid())['name'],
         ]);
 
         $resolver->setAllowedTypes('symfony.app', 'string');
+        $resolver->setAllowedTypes('master.user', 'string');
+        $resolver->setAllowedTypes('master.group', 'string');
 
         $resolver->setAllowedValues('verbosity', ['quiet', 'normal', 'verbose', 'very_verbose', 'debug']);
         $resolver->setNormalizer('verbosity', function (Options $options, $verbosity) {

@@ -18,7 +18,12 @@ queues:
         rabbitmq.password: guest
         queue.name: task_queue          # Queue name
         processes: 1                    # Process count per queue
+        worker.user: nobody             # Execute this child as
+        worker.group: nogroup
 
 # Symfony app executable
-symfony.app: /vagrant/web/app/console
+symfony.app: /path/to/syfmony/app/console
 
+# Execution options
+master.user: root
+master.group: nogroup

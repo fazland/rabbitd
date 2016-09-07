@@ -119,7 +119,7 @@ class Master
     private function initQueues()
     {
         foreach ($this->config['queues'] as $name => $options) {
-            $config = new QueueConfig($options, $this->config['symfony.app']);
+            $config = new QueueConfig($options, $this->config);
 
             for ($i = 0; $i < $config['processes']; ++$i) {
                 $this->children[] = new Child($name.' #'.$i, $config, clone $this->output, $this);
