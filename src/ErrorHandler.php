@@ -21,5 +21,10 @@ class ErrorHandler
             $this->logger->critical('Stack trace');
             $this->logger->critical($e->getTraceAsString());
         });
+
+        set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+            $this->logger->critical('Error: '.$errstr);
+            $this->logger->critical('In file '.$errfile.' at line '.$errline);
+        });
     }
 }
