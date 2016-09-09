@@ -22,7 +22,7 @@ namespace Fazland\Rabbitd\Console {
         Environment::createFromGlobal();
 
         $contents = ob_get_clean();
-        $this->assertEquals("variables_order ini directive does not contain \"E\". ENV superglobal will be not populated", $contents);
+        $this->assertEquals("variables_order ini directive does not contain 'E'. Environment variables should not be read\n", $contents);
     }
 
     public function testGetShouldReturnDefaultIfNotSet()

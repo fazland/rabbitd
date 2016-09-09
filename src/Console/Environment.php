@@ -20,7 +20,7 @@ class Environment
     public static function createFromGlobal()
     {
         if (strpos(ini_get('variables_order'), 'E') === false) {
-            echo 'variables_order ini directive does not contain "E". ENV superglobal will be not populated';
+            echo "variables_order ini directive does not contain 'E'. Environment variables should not be read\n";
         }
 
         return new self($_ENV);

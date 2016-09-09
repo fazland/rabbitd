@@ -1,14 +1,12 @@
-#!/usr/bin/env php
 <?php
 
 declare (ticks = 1);
+require __DIR__.'/vendor/autoload.php';
 
 use Fazland\Rabbitd\Application;
 
 set_time_limit(0);
 cli_set_process_title('rabbitd');
-
-require 'vendor/autoload.php';
 
 $application = new Application();
 $application->run();
