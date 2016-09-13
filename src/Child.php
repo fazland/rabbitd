@@ -61,6 +61,7 @@ class Child
 
     public function run()
     {
+        $this->process->setProcessTitle('rabbitd ('.$this->name.')');
         $this->logger->info('Starting...');
 
         $this->queue = new AmqpLibQueue($this->logger,

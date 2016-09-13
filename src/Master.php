@@ -61,6 +61,8 @@ class Master
 
     public function run()
     {
+        $this->currentProcess->setProcessTitle('rabbitd (master)');
+
         $this->running = true;
         $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
 

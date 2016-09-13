@@ -22,6 +22,11 @@ class CurrentProcess extends Process
         $this->executable = reset($this->argv);
     }
 
+    public function setProcessTitle($title)
+    {
+        return @cli_set_process_title($title);
+    }
+
     /**
      * @return array
      */
