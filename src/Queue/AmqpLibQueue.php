@@ -88,6 +88,7 @@ class AmqpLibQueue
         while (! $this->stopped) {
             try {
                 $this->channel->wait(null, true, 1);
+                pcntl_signal_dispatch();
             } catch (AMQPTimeoutException $ex) {
             } catch (AMQPIOWaitException $ex) {
             }
