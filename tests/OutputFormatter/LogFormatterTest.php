@@ -1,6 +1,7 @@
 <?php
 
 namespace Fazland\Rabbitd\Tests\OutputFormatter;
+
 use Fazland\Rabbitd\OutputFormatter\MasterFormatter;
 
 /**

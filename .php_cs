@@ -8,6 +8,7 @@ return Symfony\CS\Config\Config::create()
     ->level(Symfony\CS\FixerInterface::PSR2_LEVEL)
     ->finder($finder)
     ->fixers([
+        '-psr0',
         'array_element_no_space_before_comma',
         'array_element_white_space_after_comma',
         'blankline_after_open_tag',

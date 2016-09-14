@@ -16,6 +16,7 @@ use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
+use Symfony\Component\Debug\ErrorHandler;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\ProcessUtils;
@@ -64,6 +65,13 @@ class Application
      */
     public function __construct(CurrentProcess $currentProcess = null)
     {
+        $this->output = new StreamOutput(fopen('php://stdout', 'ab'), Output::VERBOSITY_VERY_VERBOSE);
+        $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
+
+        $this->errorHandler = ErrorHandler::register();
+        $this->errorHandler->throwAt(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_USER_WARNING, true);
+        $this->errorHandler->setDefaultLogger($this->logger, E_ALL, true);
+
         if (null === $currentProcess) {
             $currentProcess = new CurrentProcess();
         }
@@ -77,9 +85,6 @@ class Application
             echo $ex->getMessage()."\n";
             die(3);
         }
-
-        $this->output = new StreamOutput(fopen('php://stdout', 'ab'), Output::VERBOSITY_VERY_VERBOSE);
-        $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
 
         $this->readConfig();
         $this->checkAlreadyInExecution();
@@ -96,7 +101,7 @@ class Application
         $master = new Master($this->config, clone $this->output, $this->currentProcess);
 
         $this->logger->info('Starting '.$this->currentProcess->getExecutableName().' with PID #'.$this->currentProcess->getPid());
-        $this->errorHandler = new ErrorHandler($this->logger);
+        $this->errorHandler->setDefaultLogger($this->logger, E_ALL, true);
 
         try {
             $master->run();
