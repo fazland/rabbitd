@@ -6,8 +6,10 @@ use Fazland\Rabbitd\Config\MasterConfig;
 use Fazland\Rabbitd\Console\Environment;
 use Fazland\Rabbitd\Exception\RestartException;
 use Fazland\Rabbitd\Process\CurrentProcess;
+use Fazland\Rabbitd\Util\Silencer;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Symfony\Component\Console\Exception\RuntimeException as ConsoleRuntimeException;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
@@ -61,9 +63,10 @@ class Application
     /**
      * Application constructor.
      *
+     * @param InputInterface $input
      * @param CurrentProcess $currentProcess
      */
-    public function __construct(CurrentProcess $currentProcess = null)
+    public function __construct(InputInterface $input = null, CurrentProcess $currentProcess = null)
     {
         $this->output = new StreamOutput(fopen('php://stdout', 'ab'), Output::VERBOSITY_VERY_VERBOSE);
         $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
@@ -79,11 +82,13 @@ class Application
         $this->currentProcess = $currentProcess;
         $this->environment = Environment::createFromGlobal();
 
-        try {
-            $this->input = new ArgvInput($this->currentProcess->getArgv(), $this->getInputDefinition());
-        } catch (\RuntimeException $ex) {
-            echo $ex->getMessage()."\n";
-            die(3);
+        if (null === $input) {
+            try {
+                $this->input = new ArgvInput($this->currentProcess->getArgv(), $this->getInputDefinition());
+            } catch (ConsoleRuntimeException $e) {
+                $this->logger->error($e->getMessage());
+                die(-255);
+            }
         }
 
         $this->readConfig();
@@ -92,7 +97,8 @@ class Application
 
     public function run()
     {
-        $this->deamonize();
+        $this->daemonize();
+        $this->errorHandler->setExceptionHandler(null);
 
         $this->currentProcess
             ->setUser($this->config['master.user'])
@@ -101,7 +107,6 @@ class Application
         $master = new Master($this->config, clone $this->output, $this->currentProcess);
 
         $this->logger->info('Starting '.$this->currentProcess->getExecutableName().' with PID #'.$this->currentProcess->getPid());
-        $this->errorHandler->setDefaultLogger($this->logger, E_ALL, true);
 
         try {
             $master->run();
@@ -122,8 +127,7 @@ class Application
         }
 
         if (posix_kill($pid, 0)) {
-            $this->logger->error("Rabbitd is already running with PID #$pid");
-            die(2);
+            throw new \RuntimeException("Rabbitd is already running with PID #$pid");
         }
     }
 
@@ -136,13 +140,13 @@ class Application
         return $definition;
     }
 
-    private function deamonize()
+    private function daemonize()
     {
         if (! function_exists('pcntl_fork')) {
             throw new \RuntimeException('pcntl_* functions are not available, cannot continue');
         }
 
-        // Double fork magic, to prevent deamon to acquire a tty
+        // Double fork magic, to prevent daemon to acquire a tty
         if ($pid = $this->currentProcess->fork()) {
             exit;
         }
@@ -159,7 +163,7 @@ class Application
 
     private function redirectOutputs()
     {
-        @mkdir(dirname($this->config['log_file']), 0777, true);
+        Silencer::call('mkdir', dirname($this->config['log_file']), 0777, true);
 
         global $STDIN, $STDOUT, $STDERR;
 
@@ -176,13 +180,15 @@ class Application
 
         $this->output = new StreamOutput($handle, $this->config['verbosity'], false);
         $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
+
+        $this->errorHandler->setDefaultLogger($this->logger, E_ALL, true);
     }
 
     private function readConfig()
     {
         if (null === ($file = $this->input->getOption('config'))) {
             $dir = $this->environment->get('CONF_DIR', posix_getcwd().DIRECTORY_SEPARATOR.'conf');
-            $file = $dir.DIRECTORY_SEPARATOR.'/rabbitd.yml';
+            $file = $dir.DIRECTORY_SEPARATOR.'rabbitd.yml';
         }
 
         $this->config = new MasterConfig($file, $this->environment);
