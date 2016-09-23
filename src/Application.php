@@ -37,7 +37,9 @@ class Application
         $container = $this->createContainerBuilder();
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/Resources/config'));
         $loader->load('services.yml');
+
         $container->getParameterBag()->add($conf);
+        $container->setParameter('application.root_dir', $this->getRootDir());
 
         $this->onStart($container);
 
@@ -55,6 +57,19 @@ class Application
     protected function createConfiguration()
     {
         return new Configuration();
+    }
+
+    protected function getRootDir()
+    {
+        if (class_exists('Phar')) {
+            $dir = dirname(\Phar::running(false));
+        }
+
+        if (empty($dir)) {
+            $dir = realpath(__DIR__.'/..');
+        }
+
+        return $dir;
     }
 
     private function readConfigurationFile(InputInterface $input)
