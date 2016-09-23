@@ -60,12 +60,8 @@ class Master implements ContainerAwareInterface
         $this->installSignalHandlers();
         $this->initQueues();
 
-        $i = 0;
         while ($this->running) {
             $this->eventDispatcher->dispatch(Events::EVENT_LOOP);
-            if ($i++ % 10 == 0) {
-                $this->sanityCheck();
-            }
 
             sleep(1);
         }
@@ -87,14 +83,6 @@ class Master implements ContainerAwareInterface
         if ($this->restart) {
             throw new RestartException();
         }
-    }
-
-    /**
-     * @return Child[]
-     */
-    public function getChildren()
-    {
-        return $this->children;
     }
 
     public function sanityCheck()

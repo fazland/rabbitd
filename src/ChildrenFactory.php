@@ -61,7 +61,7 @@ class ChildrenFactory
 
     public function restartChild($name, Child $child)
     {
-        if (++$child->restarts % 3) {
+        if (++$child->restarts % 3 == 0) {
             // Prevent consuming all the system resources in case of queue connection error
             // @todo Think about something better!
             sleep(10);

@@ -70,6 +70,14 @@ services:
         tags:
             - { name: event_subscriber }
 
+    application.master_loop_child_checker:
+        class: Fazland\Rabbitd\EventListener\MasterLoopChecker
+        public: false
+        arguments:
+            - '@application.master'
+        tags:
+            - { name: event_subscriber }
+
     plugin.symfony_app_setter:
         class: Fazland\Rabbitd\EventListener\SymfonyAppSetter
         arguments:
