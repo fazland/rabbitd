@@ -15,8 +15,11 @@
         "php": ">=5.6.0",
         "php-amqplib/php-amqplib": "^2.6",
         "psr/log": "*",
+        "symfony/config": "^3.1",
         "symfony/console": "^3.0",
         "symfony/debug": "^3.0",
+        "symfony/dependency-injection": "^3.1",
+        "symfony/event-dispatcher": "^3.1",
         "symfony/options-resolver": "^3.0",
         "symfony/process": "^3.0",
         "symfony/yaml": "^3.0"

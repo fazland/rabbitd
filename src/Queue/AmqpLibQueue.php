@@ -2,6 +2,7 @@
 
 namespace Fazland\Rabbitd\Queue;
 
+use Fazland\Rabbitd\Util\Silencer;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Exception\AMQPIOWaitException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
@@ -55,15 +56,12 @@ class AmqpLibQueue
      * AmpqLibQueue constructor.
      *
      * @param LoggerInterface $logger
-     * @param string $hostname
-     * @param int $port
-     * @param string $username
-     * @param string $password
+     * @param AMQPStreamConnection $connection
      * @param string $queue
      */
-    public function __construct(LoggerInterface $logger, $hostname = 'localhost', $port = 5672, $username = 'guest', $password = 'guest', $queue = 'task_queue')
+    public function __construct(LoggerInterface $logger, AMQPStreamConnection $connection, $queue)
     {
-        $this->connection = new AMQPStreamConnection($hostname, $port, $username, $password);
+        $this->connection = $connection;
         $this->channel = $this->connection->channel();
 
         $this->channel->queue_declare($queue, false, true, false, false);
@@ -104,7 +102,11 @@ class AmqpLibQueue
     {
         $this->logger->debug('Received '.$msg->body);
 
-        $message = unserialize($msg->body);
+        $message = Silencer::call('json_decode', $msg->body, true);
+        if (false === $message) {
+            $message = Silencer::call('unserialize', $msg->body);
+        }
+
         if (! $message) {
             $this->logger->error("Unreadable message '$msg->body'");
         } else {

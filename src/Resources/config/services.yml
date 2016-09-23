@@ -1,0 +1,87 @@
+services:
+    event_dispatcher:
+        class: Symfony\Component\EventDispatcher\EventDispatcher
+
+    process:
+        class: Fazland\Rabbitd\Process\CurrentProcess
+
+    connection_manager:
+        class: Fazland\Rabbitd\Connection\ConnectionManager
+
+    application.output_factory:
+        class: Fazland\Rabbitd\Console\OutputFactory
+        arguments:
+            - '%verbosity%'
+        public: false
+
+    application.master_output_formatter:
+        class: Fazland\Rabbitd\OutputFormatter\LogFormatter
+        arguments:
+            - 'master'
+        public: false
+
+    application.master_output:
+        class: Symfony\Component\Console\Output\StreamOutput
+        factory: ['@application.output_factory', 'factory']
+        arguments:
+            - '%log_file%'
+        calls:
+            - ['setFormatter', ['@application.master_output_formatter']]
+        public: false
+
+    application.master_logger:
+        class: Symfony\Component\Console\Logger\ConsoleLogger
+        arguments:
+            - '@application.master_output'
+            - []
+            -
+                warning: 'comment'
+        public: false
+
+    application.in_execution_checker:
+        class: Fazland\Rabbitd\EventListener\AlreadyInExecutionChecker
+        arguments:
+            - '%pid_file%'
+            - '@process'
+        public: false
+        tags:
+            - { name: event_subscriber }
+
+    application.output_redictor:
+        class: Fazland\Rabbitd\EventListener\OutputRedirector
+        arguments:
+            - '%log_file%'
+            - '%verbosity%'
+        tags:
+            - { name: event_subscriber }
+
+    application.process_title_changer:
+        class: Fazland\Rabbitd\EventListener\ProcessTitleChanger
+        arguments:
+            - '@process'
+        tags:
+            - { name: event_subscriber }
+
+    plugin.symfony_app_setter:
+        class: Fazland\Rabbitd\EventListener\SymfonyAppSetter
+        arguments:
+            - '%symfony_app%'
+        tags:
+            - { name: event_subscriber }
+
+    application.master:
+        class: Fazland\Rabbitd\Master
+        arguments:
+            - '@event_dispatcher'
+            - '@application.master_logger'
+        calls:
+            - ['setContainer', ['@service_container']]
+
+    application.children_factory:
+        class: Fazland\Rabbitd\ChildrenFactory
+        arguments:
+            - '@connection_manager'
+            - '@application.output_factory'
+            - '%log_file%'
+            - '@process'
+            - '@event_dispatcher'

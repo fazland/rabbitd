@@ -8,22 +8,31 @@ verbosity: very_verbose
 # Set PID file
 pid_file: /var/run/rabbitd.pid
 
+connections:
+    default:
+        hostname: localhost
+        port: 5672
+        username: guest
+        password: guest
+
 # Queues
 # RabbitMQ connection paramters
 queues:
     tasks:
-        rabbitmq.hostname: localhost
-        rabbitmq.port: 5672
-        rabbitmq.username: guest
-        rabbitmq.password: guest
-        queue.name: task_queue          # Queue name
-        processes: 1                    # Process count per queue
-        worker.user: nobody             # Execute this child as
-        worker.group: nogroup
+        connection: default
+        queue_name: task_queue          # Queue name
+        exchange:                       # Connect this queue to an exchange
+            name: exchange_1
+            type: fanout
+        worker:
+            processes: 1                # Process count per queue
+            user: nobody                # Execute this child as
+            group: nogroup
 
 # Symfony app executable
-symfony.app: /path/to/syfmony/app/console
+symfony_app: /path/to/syfmony/app/console
 
 # Execution options
-master.user: root
-master.group: nogroup
+master:
+    user: root
+    group: nogroup

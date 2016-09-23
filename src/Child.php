@@ -2,30 +2,28 @@
 
 namespace Fazland\Rabbitd;
 
-use Fazland\Rabbitd\Config\QueueConfig;
-use Fazland\Rabbitd\OutputFormatter\ChildFormatter;
-use Fazland\Rabbitd\Process\CurrentProcess;
+use Fazland\Rabbitd\Connection\ConnectionManager;
+use Fazland\Rabbitd\Events\ChildStartEvent;
+use Fazland\Rabbitd\Events\Events;
 use Fazland\Rabbitd\Process\Process;
 use Fazland\Rabbitd\Queue\AmqpLibQueue;
-use Psr\Log\LogLevel;
-use Symfony\Component\Console\Logger\ConsoleLogger;
-use Symfony\Component\Console\Output\Output;
-use Symfony\Component\Console\Output\OutputInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class Child
 {
     /**
-     * @var string
+     * @var int
      */
-    private $name;
+    public $restarts = 0;
 
     /**
-     * @var OutputInterface
+     * @var LoggerInterface
      */
-    private $output;
+    private $logger;
 
     /**
-     * @var CurrentProcess|Process
+     * @var Process
      */
     private $process;
 
@@ -35,42 +33,41 @@ class Child
     private $queue;
 
     /**
-     * @var QueueConfig
+     * @var array
      */
-    private $config;
+    private $options;
 
     /**
-     * @var int
+     * @var ConnectionManager
      */
-    private $restarts = 0;
+    private $connectionManager;
 
-    public function __construct($name, QueueConfig $config, OutputInterface $output, Master $master)
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+
+    public function __construct(LoggerInterface $logger, ConnectionManager $connectionManager, EventDispatcherInterface $eventDispatcher, array $options)
     {
-        $this->name = $name;
-        $this->output = $output;
-
-        $this->outputFormatter = new ChildFormatter($name);
-        $this->output->setFormatter($this->outputFormatter);
-        $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
-        $this->config = $config;
-
-        if (0 === $this->fork($master)) {
-            $this->run();
-        }
+        $this->logger = $logger;
+        $this->connectionManager = $connectionManager;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->options = $options;
     }
 
     public function run()
     {
-        $this->process->setProcessTitle('rabbitd ('.$this->name.')');
         $this->logger->info('Starting...');
 
-        $this->queue = new AmqpLibQueue($this->logger,
-            $this->config['rabbitmq.hostname'],
-            $this->config['rabbitmq.port'],
-            $this->config['rabbitmq.username'],
-            $this->config['rabbitmq.password'],
-            $this->config['queue.name']);
-        $this->queue->setSymfonyConsoleApp($this->config['symfony.app']);
+        list($handler, ) = set_error_handler('var_dump');
+        restore_error_handler();
+
+        $handler->setDefaultLogger($this->logger, E_ALL, true);
+
+        $connection = $this->connectionManager->getConnection($this->options['connection']);
+        $this->queue = new AmqpLibQueue($this->logger, $connection, $this->options['queue_name']);
+
+        $this->eventDispatcher->dispatch(Events::CHILD_START, new ChildStartEvent($this));
 
         try {
             $this->queue->runLoop();
@@ -84,6 +81,22 @@ class Child
     }
 
     /**
+     * @return AmqpLibQueue
+     */
+    public function getQueue()
+    {
+        return $this->queue;
+    }
+
+    /**
+     * @return array
+     */
+    public function getOptions()
+    {
+        return $this->options;
+    }
+
+    /**
      * @return Process
      */
     public function getProcess()
@@ -91,53 +104,17 @@ class Child
         return $this->process;
     }
 
-    public function restart(Master $master = null)
+    public function setProcess(Process $process)
     {
-        if ($this->process instanceof CurrentProcess) {
-            die;
-        }
-
-        if (++$this->restarts % 3) {
-            // Prevent consuming all the system resources in case of queue connection error
-            // @todo Think about something better!
-            sleep(10);
-        }
-
-        if ($this->process->isAlive()) {
-            $this->process->kill(SIGTERM);
-        }
-
-        if (0 === $this->fork($master)) {
-            $this->run();
-        }
+        $this->process = $process;
     }
 
-    /**
-     * @return string
-     */
-    public function getName()
+    public function installSignalHandlers()
     {
-        return $this->name;
-    }
-
-    private function fork(Master $master)
-    {
-        if ($pid = $master->fork()) {
-            $this->process = new Process($pid);
-        } else {
-            $this->process = new CurrentProcess();
-
-            pcntl_signal(SIGTERM, function () {
-                $this->queue->stopLoop();
-            });
-            pcntl_signal(SIGHUP, SIG_DFL);
-            pcntl_signal(SIGCHLD, SIG_DFL);
-
-            $this->process
-                ->setUser($this->config['worker.user'])
-                ->setGroup($this->config['worker.group']);
-        }
-
-        return $pid;
+        pcntl_signal(SIGTERM, function () {
+            $this->queue->stopLoop();
+        });
+        pcntl_signal(SIGHUP, SIG_DFL);
+        pcntl_signal(SIGCHLD, SIG_DFL);
     }
 }

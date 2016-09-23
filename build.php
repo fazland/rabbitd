@@ -43,7 +43,7 @@ $file = __DIR__.'/build/rabbitd.phar';
 $p = new Phar($file, FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::KEY_AS_FILENAME, 'rabbitd.phar');
 
 $p->startBuffering();
-$p->buildFromDirectory(__DIR__, '/^.+\.php$/');
+$p->buildFromDirectory(__DIR__, '/^.+\.php$|^.*services.yml$/');
 unset($p['build.php']);
 
 $stub = <<<EOF

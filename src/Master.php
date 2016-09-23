@@ -4,25 +4,22 @@ namespace Fazland\Rabbitd;
 
 use Fazland\Rabbitd\Config\MasterConfig;
 use Fazland\Rabbitd\Config\QueueConfig;
+use Fazland\Rabbitd\Events\Events;
 use Fazland\Rabbitd\Exception\RestartException;
 use Fazland\Rabbitd\OutputFormatter\MasterFormatter;
 use Fazland\Rabbitd\Process\CurrentProcess;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-class Master
+class Master implements ContainerAwareInterface
 {
-    /**
-     * @var MasterConfig
-     */
-    private $config;
-
-    /**
-     * @var OutputInterface
-     */
-    private $output;
+    use ContainerAwareTrait;
 
     /**
      * @var LoggerInterface
@@ -49,25 +46,30 @@ class Master
      */
     private $currentProcess;
 
-    public function __construct(MasterConfig $config, OutputInterface $output, CurrentProcess $currentProcess)
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+
+    public function __construct(EventDispatcherInterface $eventDispatcher, LoggerInterface $logger)
     {
-        $this->config = $config;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->logger = $logger;
 
-        $this->output = $output;
-        $this->output->setFormatter(new MasterFormatter());
-
-        $this->currentProcess = $currentProcess;
+        $this->children = [];
     }
 
     public function run()
     {
-        $this->currentProcess->setProcessTitle('rabbitd (master)');
+        $this->daemonize();
+        $this->eventDispatcher->dispatch(Events::START);
+
+        list($handler, ) = set_error_handler('var_dump');
+        restore_error_handler();
+
+        $handler->setDefaultLogger($this->logger, E_ALL, true);
 
         $this->running = true;
-        $this->logger = new ConsoleLogger($this->output, [], [LogLevel::WARNING => 'comment']);
-
-        $processUser = posix_getpwuid(posix_getuid());
-        $this->logger->debug("Currently executing as '{user}'", ['user' => $processUser['name']]);
 
         $this->installSignalHandlers();
         $this->initQueues();
@@ -78,6 +80,7 @@ class Master
                 $this->sanityCheck();
             }
 
+            pcntl_signal_dispatch();
             sleep(1);
         }
 
@@ -92,7 +95,7 @@ class Master
             sleep(1);
         }
 
-        @unlink($this->config['pid_file']);
+        $this->eventDispatcher->dispatch(Events::STOP);
 
         if ($this->restart) {
             throw new RestartException();
@@ -110,21 +113,41 @@ class Master
             return;
         }
 
-        foreach ($this->children as $child) {
+        foreach ($this->children as $name => $child) {
             if (! $child->getProcess()->isAlive()) {
-                $this->logger->debug('Child "'.$child->getName().'" is dead. Restarting...');
-                $child->restart($this);
+                $this->logger->debug('Child "'.$name.'" is dead. Restarting...');
+
+                $this->container->get('application.children_factory')->restartChild($name, $child);
             }
+        }
+    }
+
+    private function daemonize()
+    {
+        $currentProcess = $this->container->get('process');
+
+        // Double fork magic, to prevent daemon to acquire a tty
+        if ($pid = $currentProcess->fork()) {
+            exit;
+        }
+
+        $currentProcess->setSid();
+
+        if ($pid = $currentProcess->fork()) {
+            exit;
         }
     }
 
     private function initQueues()
     {
-        foreach ($this->config['queues'] as $name => $options) {
-            $config = new QueueConfig($options, $this->config);
+        $queues = $this->container->getParameter('queues');
+        foreach ($queues as $name => $options) {
+            for ($i = 0; $i < $options['worker']['processes']; ++$i) {
+                $childName = $name.' #'.$i;
+                $child = $this->container->get('application.children_factory')
+                            ->createChild($childName, $options);
 
-            for ($i = 0; $i < $config['processes']; ++$i) {
-                $this->children[] = new Child($name.' #'.$i, $config, clone $this->output, $this);
+                $this->children[$name] = $child;
             }
         }
     }

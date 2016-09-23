@@ -2,6 +2,8 @@
 
 namespace Fazland\Rabbitd\Process;
 
+use Fazland\Rabbitd\Util\Silencer;
+
 class CurrentProcess extends Process
 {
     /**
@@ -24,7 +26,7 @@ class CurrentProcess extends Process
 
     public function setProcessTitle($title)
     {
-        return @cli_set_process_title($title);
+        return Silencer::call('cli_set_process_title', $title);
     }
 
     /**

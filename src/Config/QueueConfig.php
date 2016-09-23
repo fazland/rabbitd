@@ -2,6 +2,7 @@
 
 namespace Fazland\Rabbitd\Config;
 
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class QueueConfig extends Config
@@ -25,6 +26,7 @@ class QueueConfig extends Config
             'rabbitmq.username' => 'guest',
             'rabbitmq.password' => 'guest',
             'queue.name' => 'task_queue',
+            'queue.exchange' => null,
             'processes' => 1,
             'symfony.app' => $this->masterConfig['symfony.app'],
             'worker.user' => $this->masterConfig['master.user'],
@@ -34,5 +36,18 @@ class QueueConfig extends Config
         $resolver->setAllowedTypes('symfony.app', 'string');
         $resolver->setAllowedTypes('worker.user', 'string');
         $resolver->setAllowedTypes('worker.group', 'string');
+        $resolver->setAllowedTypes('queue.exchange', ['array', 'null']);
+
+        $resolver->setNormalizer('queue.exchange', function (Options $options, $value) {
+            if (null === $value) {
+                return $value;
+            }
+
+            $resolver = new OptionsResolver();
+            $resolver->setRequired('name');
+            $resolver->setDefault('type', 'fanout');
+
+            return $resolver->resolve($value);
+        });
     }
 }
