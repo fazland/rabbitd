@@ -2,18 +2,10 @@
 
 namespace Fazland\Rabbitd;
 
-use Fazland\Rabbitd\Config\MasterConfig;
-use Fazland\Rabbitd\Config\QueueConfig;
 use Fazland\Rabbitd\Events\Events;
 use Fazland\Rabbitd\Exception\RestartException;
-use Fazland\Rabbitd\OutputFormatter\MasterFormatter;
-use Fazland\Rabbitd\Process\CurrentProcess;
 use Fazland\Rabbitd\Util\ErrorHandlerUtil;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
-use Symfony\Component\Console\Logger\ConsoleLogger;
-use Symfony\Component\Console\Output\NullOutput;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
