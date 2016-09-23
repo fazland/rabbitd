@@ -52,6 +52,7 @@ services:
         arguments:
             - '%log_file%'
             - '%verbosity%'
+        public: false
         tags:
             - { name: event_subscriber }
 
@@ -59,6 +60,13 @@ services:
         class: Fazland\Rabbitd\EventListener\ProcessTitleChanger
         arguments:
             - '@process'
+        public: false
+        tags:
+            - { name: event_subscriber }
+
+    application.signal_dispatcher:
+        class: Fazland\Rabbitd\EventListener\SignalDispatcher
+        public: false
         tags:
             - { name: event_subscriber }
 

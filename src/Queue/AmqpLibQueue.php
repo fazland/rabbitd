@@ -13,11 +13,6 @@ use Symfony\Component\Process\ProcessBuilder;
 class AmqpLibQueue
 {
     /**
-     * @var bool
-     */
-    private $stopped;
-
-    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -40,16 +35,6 @@ class AmqpLibQueue
     /**
      * @var string
      */
-    private $environment;
-
-    /**
-     * @var bool
-     */
-    private $enabled = true;
-
-    /**
-     * @var string
-     */
     private $queue;
 
     /**
@@ -66,9 +51,11 @@ class AmqpLibQueue
 
         $this->channel->queue_declare($queue, false, true, false, false);
 
-        $this->stopped = false;
         $this->logger = $logger;
         $this->queue = $queue;
+
+        $this->channel->basic_qos(null, 1, null);
+        $this->channel->basic_consume($this->queue, '', false, false, false, false, [$this, 'processMessage']);
     }
 
     public function __destruct()
@@ -79,23 +66,11 @@ class AmqpLibQueue
 
     public function runLoop()
     {
-        $this->channel->basic_qos(null, 1, null);
-        $this->channel->basic_consume($this->queue, '', false, false, false, false, [$this, 'processMessage']);
-
-        $this->logger->info('Started. Waiting for jobs...');
-        while (! $this->stopped) {
-            try {
-                $this->channel->wait(null, true, 1);
-                pcntl_signal_dispatch();
-            } catch (AMQPTimeoutException $ex) {
-            } catch (AMQPIOWaitException $ex) {
-            }
+        try {
+            $this->channel->wait(null, true, 1);
+        } catch (AMQPTimeoutException $ex) {
+        } catch (AMQPIOWaitException $ex) {
         }
-    }
-
-    public function stopLoop()
-    {
-        $this->stopped = true;
     }
 
     public function processMessage(AMQPMessage $msg)
@@ -133,19 +108,6 @@ class AmqpLibQueue
     public function setSymfonyConsoleApp($console)
     {
         $this->symfony_app = $console;
-    }
-
-    public function setEnvironment($environment)
-    {
-        $this->environment = $environment;
-    }
-
-    /**
-     * @param bool $enabled
-     */
-    public function setEnabled($enabled)
-    {
-        $this->enabled = $enabled;
     }
 
     /**

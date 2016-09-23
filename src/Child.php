@@ -7,6 +7,7 @@ use Fazland\Rabbitd\Events\ChildStartEvent;
 use Fazland\Rabbitd\Events\Events;
 use Fazland\Rabbitd\Process\Process;
 use Fazland\Rabbitd\Queue\AmqpLibQueue;
+use Fazland\Rabbitd\Util\ErrorHandlerUtil;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -47,6 +48,11 @@ class Child
      */
     private $eventDispatcher;
 
+    /**
+     * @var bool
+     */
+    private $running = true;
+
     public function __construct(LoggerInterface $logger, ConnectionManager $connectionManager, EventDispatcherInterface $eventDispatcher, array $options)
     {
         $this->logger = $logger;
@@ -58,22 +64,23 @@ class Child
     public function run()
     {
         $this->logger->info('Starting...');
-
-        list($handler, ) = set_error_handler('var_dump');
-        restore_error_handler();
-
-        $handler->setDefaultLogger($this->logger, E_ALL, true);
+        ErrorHandlerUtil::setLogger($this->logger);
 
         $connection = $this->connectionManager->getConnection($this->options['connection']);
         $this->queue = new AmqpLibQueue($this->logger, $connection, $this->options['queue_name']);
 
         $this->eventDispatcher->dispatch(Events::CHILD_START, new ChildStartEvent($this));
+        $this->logger->info('Started. Waiting for jobs...');
 
-        try {
-            $this->queue->runLoop();
-        } catch (\Exception $e) {
-            $this->logger->critical('Uncaugth exception '.get_class($e).': '.$e->getMessage());
-            $this->logger->critical($e->getTraceAsString());
+        while ($this->running) {
+            try {
+                $this->queue->runLoop();
+            } catch (\Exception $e) {
+                $this->logger->critical('Uncaugth exception '.get_class($e).': '.$e->getMessage());
+                $this->logger->critical($e->getTraceAsString());
+            }
+
+            $this->eventDispatcher->dispatch(Events::CHILD_EVENT_LOOP);
         }
 
         $this->logger->info('Dying...');
@@ -112,7 +119,7 @@ class Child
     public function installSignalHandlers()
     {
         pcntl_signal(SIGTERM, function () {
-            $this->queue->stopLoop();
+            $this->running = false;
         });
         pcntl_signal(SIGHUP, SIG_DFL);
         pcntl_signal(SIGCHLD, SIG_DFL);

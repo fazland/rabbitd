@@ -8,6 +8,7 @@ use Fazland\Rabbitd\Events\Events;
 use Fazland\Rabbitd\Exception\RestartException;
 use Fazland\Rabbitd\OutputFormatter\MasterFormatter;
 use Fazland\Rabbitd\Process\CurrentProcess;
+use Fazland\Rabbitd\Util\ErrorHandlerUtil;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Logger\ConsoleLogger;
@@ -42,11 +43,6 @@ class Master implements ContainerAwareInterface
     private $children;
 
     /**
-     * @var CurrentProcess
-     */
-    private $currentProcess;
-
-    /**
      * @var EventDispatcherInterface
      */
     private $eventDispatcher;
@@ -62,12 +58,10 @@ class Master implements ContainerAwareInterface
     public function run()
     {
         $this->daemonize();
+        $this->logger->info('Starting...');
+
         $this->eventDispatcher->dispatch(Events::START);
-
-        list($handler, ) = set_error_handler('var_dump');
-        restore_error_handler();
-
-        $handler->setDefaultLogger($this->logger, E_ALL, true);
+        ErrorHandlerUtil::setLogger($this->logger);
 
         $this->running = true;
 
@@ -76,11 +70,11 @@ class Master implements ContainerAwareInterface
 
         $i = 0;
         while ($this->running) {
+            $this->eventDispatcher->dispatch(Events::EVENT_LOOP);
             if ($i++ % 10 == 0) {
                 $this->sanityCheck();
             }
 
-            pcntl_signal_dispatch();
             sleep(1);
         }
 
@@ -96,15 +90,19 @@ class Master implements ContainerAwareInterface
         }
 
         $this->eventDispatcher->dispatch(Events::STOP);
+        $this->logger->info('Ended #'.$this->container->get('process')->getPid());
 
         if ($this->restart) {
             throw new RestartException();
         }
     }
 
-    public function fork()
+    /**
+     * @return Child[]
+     */
+    public function getChildren()
     {
-        return $this->currentProcess->fork();
+        return $this->children;
     }
 
     public function sanityCheck()
@@ -141,11 +139,12 @@ class Master implements ContainerAwareInterface
     private function initQueues()
     {
         $queues = $this->container->getParameter('queues');
+        $childrenFactory = $this->container->get('application.children_factory');
+
         foreach ($queues as $name => $options) {
             for ($i = 0; $i < $options['worker']['processes']; ++$i) {
                 $childName = $name.' #'.$i;
-                $child = $this->container->get('application.children_factory')
-                            ->createChild($childName, $options);
+                $child = $childrenFactory->createChild($childName, $options);
 
                 $this->children[$name] = $child;
             }
