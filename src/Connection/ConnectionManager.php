@@ -7,7 +7,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 class ConnectionManager
 {
     /**
-     * @var \AMQPConnection[]
+     * @var AMQPStreamConnection[]
      */
     private $connections;
 

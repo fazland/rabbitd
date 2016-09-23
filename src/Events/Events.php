@@ -11,4 +11,6 @@ class Events
 
     const CHILD_START = 'child.start';
     const CHILD_EVENT_LOOP = 'child.loop';
+
+    const ERROR = 'application.error';
 }

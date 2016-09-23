@@ -21,6 +21,7 @@
         "symfony/dependency-injection": "^3.1",
         "symfony/event-dispatcher": "^3.1",
         "symfony/options-resolver": "^3.0",
+        "symfony/polyfill": "^1.2",
         "symfony/process": "^3.0",
         "symfony/yaml": "^3.0"
     },
