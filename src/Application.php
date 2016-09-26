@@ -58,16 +58,27 @@ class Application
 
     public function start(InputInterface $input, OutputInterface $output)
     {
-        $this->logger->info('Processing configuration');
-        $processor = new Processor();
-        $conf = $processor->processConfiguration($this->createConfiguration(), $this->readConfigurationFile($input));
+        $this->container->setParameter('application.root_dir', $this->getRootDir(false));
+        $this->container->setParameter('application.root_uri', $this->getRootDir(true));
 
+        $configuration = $this->readConfigurationFile($input);
+        if (isset($configuration['configuration']['plugins_dir'])) {
+            $pluginsDir = $configuration['configuration']['plugins_dir'];
+        } else {
+            $pluginsDir = $this->getRootDir(false).'/plugins';
+        }
+
+        $this->container->setParameter('plugins_dir', $pluginsDir);
         $loader = new YamlFileLoader($this->container, new FileLocator(__DIR__.'/Resources/config'));
         $loader->load('services.yml');
 
+        $this->initPlugins();
+
+        $this->logger->info('Processing configuration...');
+        $processor = new Processor();
+        $conf = $processor->processConfiguration($this->createConfiguration(), $configuration);
+
         $this->container->getParameterBag()->add($conf);
-        $this->container->setParameter('application.root_dir', $this->getRootDir(false));
-        $this->container->setParameter('application.root_uri', $this->getRootDir(true));
 
         $composer = $this->container->get('application.plugin_manager.composer');
         $composer->setOutput($output);
@@ -93,7 +104,10 @@ class Application
 
     protected function createConfiguration()
     {
-        return new Configuration();
+        $pluginManager = $this->container->get('application.plugin_manager');
+        $configuration = new Configuration($pluginManager);
+
+        return $configuration;
     }
 
     protected function getRootDir($uri = false)
@@ -140,22 +154,27 @@ class Application
 
         Silencer::call('mkdir', dirname($this->container->getParameter('log_file')), 0777, true);
 
-        $pluginManager = $this->container->get('application.plugin_manager');
-        $pluginManager->addComposerDependencies();
-
-        $this->logger->info('Resolving composer dependencies...');
-        $this->container->get('application.plugin_manager.composer')->resolve();
-
-        require $this->getRootDir(false).'/vendor/composer/autoload_static.php';
-        require $this->getRootDir(false).'/vendor/composer/autoload_real.php';
-        $this->autoload = require $this->getRootDir(false).'/vendor/autoload.php';
-
-        $pluginManager->initPlugins($this->container);
+        $this->container->get('application.plugin_manager')->onStart($this->container);
     }
 
     public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
         $this->container->set('application.console_logger', $logger);
+    }
+
+    private function initPlugins()
+    {
+        $pluginManager = $this->container->get('application.plugin_manager');
+        $pluginManager->addComposerDependencies();
+
+        $this->logger->info('Resolving composer dependencies...');
+        $this->container->get('application.plugin_manager.composer')->resolve();
+
+        require $this->getRootDir(false) . '/vendor/composer/autoload_static.php';
+        require $this->getRootDir(false) . '/vendor/composer/autoload_real.php';
+        $this->autoload = require $this->getRootDir(false) . '/vendor/autoload.php';
+
+        $pluginManager->initPlugins();
     }
 }

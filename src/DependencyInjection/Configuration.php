@@ -2,13 +2,26 @@
 
 namespace Fazland\Rabbitd\DependencyInjection;
 
-use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Fazland\Rabbitd\Plugin\PluginManager;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
+    /**
+     * @var PluginManager
+     */
+    private $pluginManager;
+
+    /**
+     * @inheritDoc
+     */
+    public function __construct(PluginManager $pluginManager)
+    {
+        $this->pluginManager = $pluginManager;
+    }
+
     /**
      * @inheritDoc
      */
@@ -57,10 +70,12 @@ class Configuration implements ConfigurationInterface
             ->end()
         ;
 
+        $this->pluginManager->addConfiguration($root);
+
         return $treeBuilder;
     }
 
-    private function addQueuesNode(ArrayNodeDefinition $root)
+    private function addQueuesNode(NodeDefinition $root)
     {
         $root
             ->children()

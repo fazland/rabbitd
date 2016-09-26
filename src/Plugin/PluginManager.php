@@ -5,6 +5,8 @@ namespace Fazland\Rabbitd\Plugin;
 use Fazland\Rabbitd\Composer\Composer;
 use Fazland\Rabbitd\Util\ClassUtils;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Finder\Finder;
 
@@ -58,7 +60,7 @@ class PluginManager
         }
     }
 
-    public function initPlugins(ContainerInterface $container)
+    public function initPlugins()
     {
         $finder = Finder::create()
             ->files()
@@ -77,13 +79,28 @@ class PluginManager
                 continue;
             }
 
-            /** @var PluginInterface $plugin */
             $plugin = $reflClass->newInstance();
-            $this->logger->info('Starting plugin "'.$plugin->getName().'"...');
+            $this->plugins[] = $plugin;
+        }
+    }
+
+    public function addConfiguration(NodeDefinition $definition)
+    {
+        /** @var PluginInterface $plugin */
+        foreach ($this->plugins as $plugin) {
+            $this->logger->info('Adding plugin configuration for "' . $plugin->getName() . '"...');
+
+            $plugin->addConfiguration($definition);
+        }
+    }
+
+    public function onStart(ContainerInterface $container)
+    {
+        /** @var PluginInterface $plugin */
+        foreach ($this->plugins as $plugin) {
+            $this->logger->info('Starting plugin "' . $plugin->getName() . '"...');
 
             $plugin->onStart($container);
-
-            $this->plugins[] = $plugin;
         }
     }
 }

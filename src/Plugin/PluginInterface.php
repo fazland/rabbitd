@@ -2,6 +2,8 @@
 
 namespace Fazland\Rabbitd\Plugin;
 
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 interface PluginInterface
@@ -12,6 +14,15 @@ interface PluginInterface
      * @return string
      */
     public function getName();
+
+    /**
+     * Add configuration parameters if necessary
+     *
+     * @param NodeDefinition $root
+     *
+     * @return void
+     */
+    public function addConfiguration(NodeDefinition $root);
 
     /**
      * Called BEFORE the application starts.
