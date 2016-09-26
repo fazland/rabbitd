@@ -28,7 +28,7 @@ class PluginManager
     private $pluginsDir;
 
     /**
-     * @var PluginInterface
+     * @var PluginInterface[]
      */
     private $plugins = [];
 
@@ -86,7 +86,6 @@ class PluginManager
 
     public function addConfiguration(NodeDefinition $definition)
     {
-        /** @var PluginInterface $plugin */
         foreach ($this->plugins as $plugin) {
             $this->logger->info('Adding plugin configuration for "' . $plugin->getName() . '"...');
 
@@ -96,7 +95,6 @@ class PluginManager
 
     public function onStart(ContainerInterface $container)
     {
-        /** @var PluginInterface $plugin */
         foreach ($this->plugins as $plugin) {
             $this->logger->info('Starting plugin "' . $plugin->getName() . '"...');
 
