@@ -55,6 +55,8 @@ __HALT_COMPILER();
 EOF;
 
         $this->phar->setStub($stub);
+        $this->phar->compressFiles(\Phar::BZ2);
+
         $this->phar->stopBuffering();
 
         chmod($this->file, 0754);
@@ -68,7 +70,7 @@ EOF;
     private function addFile(\SplFileInfo $file)
     {
         $path = strtr(str_replace(dirname(__DIR__).DIRECTORY_SEPARATOR, '', $file->getRealPath()), '\\', '/');
-        echo $path."\n";
+        echo 'Adding "'.$path."\"...\n";
         $content = file_get_contents($file);
 
         $this->phar->addFromString($path, $content);
