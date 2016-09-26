@@ -1,0 +1,19 @@
+{
+    "name": "symfony/framework-standard-edition",
+    "license": "MIT",
+    "type": "project",
+    "description": "The \"Symfony Standard Edition\" distribution",
+    "autoload": {
+        "psr-4": { "Plugin\\Alekitto\\": "./" }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/fazland/JMSI18nRoutingBundle.git"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "doctrine/orm": "2.5.*"
+    }
+}

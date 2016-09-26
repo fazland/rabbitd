@@ -41,6 +41,10 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('group')->defaultValue('nogroup')->end()
                     ->end()
                 ->end()
+                ->scalarNode('plugins_dir')
+                    ->info('Plugins base directory')
+                    ->defaultValue('%application.root_dir%/plugins')
+                ->end()
             ->end()
         ;
 

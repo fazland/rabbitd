@@ -14,6 +14,10 @@ services:
             - '%verbosity%'
         public: false
 
+    application.console_logger:
+        class: Psr\Log\LoggerInterface
+        synthetic: true
+
     application.master_output_formatter:
         class: Fazland\Rabbitd\OutputFormatter\LogFormatter
         arguments:
@@ -101,3 +105,15 @@ services:
             - '%log_file%'
             - '@process'
             - '@event_dispatcher'
+
+    application.plugin_manager.composer:
+        class: Fazland\Rabbitd\Composer\Composer
+        arguments:
+            - '%application.root_uri%'
+
+    application.plugin_manager:
+        class: Fazland\Rabbitd\Plugin\PluginManager
+        arguments:
+            - '@application.plugin_manager.composer'
+            - '@application.console_logger'
+            - '%plugins_dir%'

@@ -2,6 +2,8 @@
 
 namespace Fazland\Rabbitd;
 
+use Composer\Autoload\ClassLoader;
+use Fazland\Rabbitd\Composer\Composer;
 use Fazland\Rabbitd\Console\Environment;
 use Fazland\Rabbitd\DependencyInjection\CompilerPass\ConnectionCreator;
 use Fazland\Rabbitd\DependencyInjection\CompilerPass\EventListenerPass;
@@ -10,9 +12,13 @@ use Fazland\Rabbitd\DependencyInjection\Configuration;
 use Fazland\Rabbitd\Events\ErrorEvent;
 use Fazland\Rabbitd\Events\Events;
 use Fazland\Rabbitd\Util\Silencer;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,14 +37,28 @@ class Application
      */
     private $container;
 
-    public function __construct(Environment $environment)
+    /**
+     * @var ClassLoader
+     */
+    private $autoload;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    public function __construct(Environment $environment, ClassLoader $autoload)
     {
         $this->environment = $environment;
         $this->container = $this->createContainerBuilder();
+        $this->autoload = $autoload;
+
+        $this->setLogger(new NullLogger());
     }
 
-    public function start(InputInterface $input)
+    public function start(InputInterface $input, OutputInterface $output)
     {
+        $this->logger->info('Processing configuration');
         $processor = new Processor();
         $conf = $processor->processConfiguration($this->createConfiguration(), $this->readConfigurationFile($input));
 
@@ -46,12 +66,15 @@ class Application
         $loader->load('services.yml');
 
         $this->container->getParameterBag()->add($conf);
-        $this->container->setParameter('application.root_dir', $this->getRootDir());
+        $this->container->setParameter('application.root_dir', $this->getRootDir(false));
+        $this->container->setParameter('application.root_uri', $this->getRootDir(true));
+
+        $composer = $this->container->get('application.plugin_manager.composer');
+        $composer->setOutput($output);
 
         $this->onStart();
 
         $this->container->compile();
-
         $this->container->get('event_dispatcher')->dispatch(Events::PRE_START);
 
         try {
@@ -73,10 +96,10 @@ class Application
         return new Configuration();
     }
 
-    protected function getRootDir()
+    protected function getRootDir($uri = false)
     {
         if (class_exists('Phar')) {
-            $dir = dirname(\Phar::running(false));
+            $dir = dirname(\Phar::running($uri));
         }
 
         if (empty($dir)) {
@@ -116,5 +139,23 @@ class Application
             ->addCompilerPass(new EventListenerPass(), PassConfig::TYPE_OPTIMIZE);
 
         Silencer::call('mkdir', dirname($this->container->getParameter('log_file')), 0777, true);
+
+        $pluginManager = $this->container->get('application.plugin_manager');
+        $pluginManager->addComposerDependencies();
+
+        $this->logger->info('Resolving composer dependencies...');
+        $this->container->get('application.plugin_manager.composer')->resolve();
+
+        require $this->getRootDir(false).'/vendor/composer/autoload_static.php';
+        require $this->getRootDir(false).'/vendor/composer/autoload_real.php';
+        $this->autoload = require $this->getRootDir(false).'/vendor/autoload.php';
+
+        $pluginManager->initPlugins($this->container);
+    }
+
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+        $this->container->set('application.console_logger', $logger);
     }
 }

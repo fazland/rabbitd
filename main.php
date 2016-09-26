@@ -1,7 +1,21 @@
 <?php
 
 declare (ticks = 1);
-require __DIR__.'/vendor/autoload.php';
+
+if (class_exists('Phar')) {
+    $dir = dirname(\Phar::running());
+}
+
+if (empty($dir)) {
+    $dir = realpath(__DIR__);
+}
+
+if (file_exists($dir.'/vendor/autoload.php')) {
+    $loader = require $dir.'/vendor/autoload.php';
+} else {
+    $loader = require __DIR__ . '/vendor/autoload.php';
+}
+
 
 use Fazland\Rabbitd\Application;
 use Fazland\Rabbitd\Console\Environment;
@@ -32,5 +46,6 @@ $definition = new InputDefinition([
     new InputOption('config', 'c', InputOption::VALUE_REQUIRED, 'Set configuration file', $environment->get('CONF_DIR', posix_getcwd().'/conf/rabbitd.yml')),
 ]);
 
-$application = new Application($environment);
-$application->start(new ArgvInput(null, $definition));
+$application = new Application($environment, $loader);
+$application->setLogger($logger);
+$application->start(new ArgvInput(null, $definition), $output);
