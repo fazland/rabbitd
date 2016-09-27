@@ -13,13 +13,13 @@ class SignalDispatcher implements EventSubscriberInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public static function getSubscribedEvents()
     {
         return [
             Events::EVENT_LOOP => 'onLoop',
-            Events::CHILD_EVENT_LOOP => 'onLoop'
+            Events::CHILD_EVENT_LOOP => 'onLoop',
         ];
     }
 }

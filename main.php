@@ -13,12 +13,12 @@ if (empty($dir)) {
 if (file_exists($dir.'/vendor/autoload.php')) {
     $loader = require $dir.'/vendor/autoload.php';
 } else {
-    $loader = require __DIR__ . '/vendor/autoload.php';
+    $loader = require __DIR__.'/vendor/autoload.php';
 }
-
 
 use Fazland\Rabbitd\Application;
 use Fazland\Rabbitd\Console\Environment;
+use Psr\Log\LogLevel;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
@@ -26,7 +26,6 @@ use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Debug\ErrorHandler;
-use Psr\Log\LogLevel;
 
 set_time_limit(0);
 

@@ -67,9 +67,9 @@ class Child
         ErrorHandlerUtil::setLogger($this->logger);
 
         $connection = $this->connectionManager->getConnection($this->options['connection']);
-        $this->queue = new AmqpLibQueue($this->logger, $connection, $this->options['queue_name']);
+        $this->queue = new AmqpLibQueue($this->logger, $connection, $this->options['queue_name'], $this->eventDispatcher);
 
-        if ($this->options['exchange']) {
+        if (!empty($this->options['exchange'])) {
             $this->queue->setExchange($this->options['exchange']['name'], $this->options['exchange']['type']);
         }
 
@@ -82,6 +82,7 @@ class Child
             } catch (\Exception $e) {
                 $this->logger->critical('Uncaugth exception '.get_class($e).': '.$e->getMessage());
                 $this->logger->critical($e->getTraceAsString());
+                $this->running = false;
             }
 
             $this->eventDispatcher->dispatch(Events::CHILD_EVENT_LOOP);

@@ -3,11 +3,15 @@
 namespace Fazland\Rabbitd\Plugin;
 
 use Fazland\Rabbitd\Composer\Composer;
+use Fazland\Rabbitd\OutputFormatter\LogFormatter;
 use Fazland\Rabbitd\Util\ClassUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
-use Symfony\Component\Config\Definition\Builder\TreeBuilder;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\StreamOutput;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Finder\Finder;
 
 class PluginManager
@@ -87,16 +91,43 @@ class PluginManager
     public function addConfiguration(NodeDefinition $definition)
     {
         foreach ($this->plugins as $plugin) {
-            $this->logger->info('Adding plugin configuration for "' . $plugin->getName() . '"...');
+            $this->logger->info('Adding plugin configuration for "'.$plugin->getName().'"...');
 
             $plugin->addConfiguration($definition);
         }
     }
 
-    public function onStart(ContainerInterface $container)
+    public function onStart(ContainerBuilder $container)
     {
         foreach ($this->plugins as $plugin) {
-            $this->logger->info('Starting plugin "' . $plugin->getName() . '"...');
+            $this->logger->info('Starting plugin "'.$plugin->getName().'"...');
+
+            $formatterId = sprintf('rabbitd.plugins.%s.formatter', $plugin->getName());
+            $formatter = new Definition(LogFormatter::class);
+            $formatter->setArguments([
+                'plugins - '.$plugin->getName(),
+            ]);
+
+            $outputId = sprintf('rabbitd.plugins.%s.output', $plugin->getName());
+            $output = new Definition(StreamOutput::class);
+            $output->setFactory([new Reference('application.output_factory'), 'factory']);
+            $output->setArguments([
+                $container->getParameter('log_file'),
+            ]);
+            $output->addMethodCall('setFormatter', [new Reference($formatterId)]);
+
+            $logger = new Definition(ConsoleLogger::class);
+            $logger->setArguments([
+                new Reference($outputId),
+                [],
+                [
+                    'warning' => 'comment',
+                ],
+            ]);
+
+            $container->setDefinition($formatterId, $formatter);
+            $container->setDefinition($outputId, $output);
+            $container->setDefinition(sprintf('rabbitd.plugins.%s.logger', $plugin->getName()), $logger);
 
             $plugin->onStart($container);
         }

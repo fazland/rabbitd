@@ -4,6 +4,7 @@
  * This file was taken from Composer (https://github.com/composer/composer)
  * and improved as suggested since PHP min version is 5.6
  */
+
 namespace Fazland\Rabbitd\Util;
 
 /**

@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 class VerbosityNormalizer implements CompilerPassInterface
 {
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function process(ContainerBuilder $container)
     {
@@ -42,5 +42,4 @@ class VerbosityNormalizer implements CompilerPassInterface
                 return OutputInterface::VERBOSITY_DEBUG;
         }
     }
-
 }

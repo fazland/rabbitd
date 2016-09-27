@@ -38,6 +38,7 @@ class ConnectionManager
         }
 
         $parameters = $this->parameters[$name];
+
         return $this->connections[$name] = new AMQPStreamConnection(
             $parameters['hostname'],
             $parameters['port'],

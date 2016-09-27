@@ -31,12 +31,12 @@ class MasterLoopChecker implements EventSubscriberInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public static function getSubscribedEvents()
     {
         return [
-            Events::EVENT_LOOP => 'onLoop'
+            Events::EVENT_LOOP => 'onLoop',
         ];
     }
 }

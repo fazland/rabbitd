@@ -40,12 +40,12 @@ class OutputRedirector implements EventSubscriberInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public static function getSubscribedEvents()
     {
         return [
-            Events::START => ['onStart']
+            Events::START => ['onStart'],
         ];
     }
 }

@@ -61,7 +61,7 @@ class Composer
         $this->config->setConfigSource($jsonConfigSource);
         $this->config->merge($this->rootFile->read());
         $this->config->merge([
-            'config' => ['autoloader-suffix' => md5(uniqid('', true))]
+            'config' => ['autoloader-suffix' => md5(uniqid('', true))],
         ]);
 
         $this->packages = [];

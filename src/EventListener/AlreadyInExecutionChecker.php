@@ -49,14 +49,14 @@ class AlreadyInExecutionChecker implements EventSubscriberInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public static function getSubscribedEvents()
     {
         return [
             Events::PRE_START => ['onPreStart', 255],
             Events::START => ['onStart', 100],
-            Events::STOP => ['onStop']
+            Events::STOP => ['onStop'],
         ];
     }
 }

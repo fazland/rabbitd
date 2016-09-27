@@ -3,21 +3,21 @@
 namespace Fazland\Rabbitd\Plugin;
 
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 abstract class AbstractPlugin implements PluginInterface
 {
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function addConfiguration(NodeDefinition $root)
     {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
-    public function onStart(ContainerInterface $container)
+    public function onStart(ContainerBuilder $container)
     {
     }
 }

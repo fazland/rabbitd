@@ -26,7 +26,7 @@ class ClassUtils
             if (T_NAMESPACE === $lastToken) {
                 while (isset($tokens[$i]) && is_array($token = $tokens[$i]) && in_array($token[0], [T_NS_SEPARATOR, T_STRING])) {
                     $namespace .= $token[1];
-                    $i++;
+                    ++$i;
                 }
             }
 

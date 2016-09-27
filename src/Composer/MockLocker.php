@@ -8,14 +8,14 @@ use Composer\Repository\ArrayRepository;
 class MockLocker extends Locker
 {
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function __construct()
     {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isLocked()
     {
@@ -23,7 +23,7 @@ class MockLocker extends Locker
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isFresh()
     {
@@ -31,7 +31,7 @@ class MockLocker extends Locker
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getLockedRepository($withDevReqs = false)
     {
@@ -39,7 +39,7 @@ class MockLocker extends Locker
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getPlatformRequirements($withDevReqs = false)
     {
@@ -82,11 +82,10 @@ class MockLocker extends Locker
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function setLockData(array $packages, $devPackages, array $platformReqs, $platformDevReqs, array $aliases, $minimumStability, array $stabilityFlags, $preferStable, $preferLowest, array $platformOverrides)
     {
         return true;
     }
-
 }

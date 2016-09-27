@@ -82,13 +82,6 @@ services:
         tags:
             - { name: event_subscriber }
 
-    plugin.symfony_app_setter:
-        class: Fazland\Rabbitd\EventListener\SymfonyAppSetter
-        arguments:
-            - '%symfony_app%'
-        tags:
-            - { name: event_subscriber }
-
     application.master:
         class: Fazland\Rabbitd\Master
         arguments:

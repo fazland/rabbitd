@@ -2,13 +2,14 @@
 
 namespace Fazland\Rabbitd\Queue;
 
-use Fazland\Rabbitd\Util\Silencer;
+use Fazland\Rabbitd\Events\Events;
+use Fazland\Rabbitd\Events\MessageEvent;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Exception\AMQPIOWaitException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Process\ProcessBuilder;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class AmqpLibQueue
 {
@@ -30,12 +31,12 @@ class AmqpLibQueue
     /**
      * @var string
      */
-    private $symfony_app;
+    private $queue;
 
     /**
-     * @var string
+     * @var EventDispatcherInterface
      */
-    private $queue;
+    private $eventDispatcher;
 
     /**
      * AmpqLibQueue constructor.
@@ -43,8 +44,9 @@ class AmqpLibQueue
      * @param LoggerInterface $logger
      * @param AMQPStreamConnection $connection
      * @param string $queue
+     * @param EventDispatcherInterface $eventDispatcher
      */
-    public function __construct(LoggerInterface $logger, AMQPStreamConnection $connection, $queue)
+    public function __construct(LoggerInterface $logger, AMQPStreamConnection $connection, $queue, EventDispatcherInterface $eventDispatcher)
     {
         $this->connection = $connection;
         $this->channel = $this->connection->channel();
@@ -56,6 +58,7 @@ class AmqpLibQueue
 
         $this->channel->basic_qos(null, 1, null);
         $this->channel->basic_consume($this->queue, '', false, false, false, false, [$this, 'processMessage']);
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     public function __destruct()
@@ -76,73 +79,17 @@ class AmqpLibQueue
     {
         $this->logger->debug('Received '.$msg->body);
 
-        $message = Silencer::call('json_decode', $msg->body, true);
-        if (false === $message) {
-            $message = Silencer::call('unserialize', $msg->body);
-        }
+        $this->eventDispatcher->dispatch(Events::MESSAGE_RECEIVED, $event = new MessageEvent($msg));
 
-        if (! $message) {
-            $this->logger->error("Unreadable message '$msg->body'");
+        if ($event->isProcessed()) {
+            $msg->delivery_info['channel']->basic_ack($msg->delivery_info['delivery_tag']);
         } else {
-            switch ($message['type']) {
-                case 'run_process':
-                    $this->exec($message, $message['cmdline']);
-                    break;
-
-                case 'run_symfony':
-                    $cmdline = $message['command'];
-                    array_unshift($cmdline, $this->symfony_app);
-                    $this->exec($message, $cmdline);
-                    break;
-
-                default:
-                    $this->logger->error("Unknown type '{$message['type']}'");
-                    throw new \Exception('Unknown type received. See log for details');
-            }
+            throw new \Exception('Message left unprocessed. See log for details');
         }
-
-        $msg->delivery_info['channel']->basic_ack($msg->delivery_info['delivery_tag']);
     }
 
     public function setExchange($name, $type)
     {
         $this->channel->exchange_declare($name, $type);
-    }
-
-    public function setSymfonyConsoleApp($console)
-    {
-        $this->symfony_app = $console;
-    }
-
-    /**
-     * @param $message
-     * @param $cmdline
-     *
-     * @throws \Exception
-     */
-    private function exec($message, $cmdline)
-    {
-        $stdin = isset($message['stdin']) ? $message['stdin'] : null;
-
-        $process = ProcessBuilder::create($cmdline)
-            ->setInput(json_encode($stdin))
-            ->setTimeout(null)
-            ->getProcess();
-
-        $this->logger->info('Executing '.$process->getCommandLine());
-
-        $process->run(function ($type, $data) {
-            $this->logger->debug($data);
-        });
-
-        if ($process->getExitCode() != 0) {
-            $error = 'Process errored [cmd_line: '.$process->getCommandLine().
-                ', input: '.json_encode($stdin)."]\n".
-                "Output: \n".$process->getOutput()."\n".
-                "Error: \n".$process->getErrorOutput();
-            $this->logger->error($error);
-
-            throw new \Exception('Process errored. See log for details');
-        }
     }
 }

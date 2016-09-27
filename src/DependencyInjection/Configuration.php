@@ -15,7 +15,7 @@ class Configuration implements ConfigurationInterface
     private $pluginManager;
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function __construct(PluginManager $pluginManager)
     {
@@ -23,7 +23,7 @@ class Configuration implements ConfigurationInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getConfigTreeBuilder()
     {
@@ -63,12 +63,6 @@ class Configuration implements ConfigurationInterface
 
         $this->addConnectionsNode($root);
         $this->addQueuesNode($root);
-
-        $root
-            ->children()
-                ->scalarNode('symfony_app')->isRequired()->end()
-            ->end()
-        ;
 
         $this->pluginManager->addConfiguration($root);
 

@@ -3,8 +3,7 @@
 namespace Fazland\Rabbitd\Plugin;
 
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
-use Symfony\Component\Config\Definition\Builder\TreeBuilder;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 interface PluginInterface
 {
@@ -28,9 +27,9 @@ interface PluginInterface
      * Called BEFORE the application starts.
      * You can register here DI compiler passes, overrides or event listeners
      *
-     * @param ContainerInterface $container
+     * @param ContainerBuilder $container
      *
-     * @return void
+     * @return
      */
-    public function onStart(ContainerInterface $container);
+    public function onStart(ContainerBuilder $container);
 }

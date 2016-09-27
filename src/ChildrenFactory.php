@@ -56,6 +56,7 @@ class ChildrenFactory
         $child = new Child($logger, $this->connectionManager, $this->eventDispatcher, $options);
 
         $this->restartChild($name, $child);
+
         return $child;
     }
 

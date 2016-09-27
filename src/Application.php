@@ -17,7 +17,6 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -171,9 +170,9 @@ class Application
         $this->logger->info('Resolving composer dependencies...');
         $this->container->get('application.plugin_manager.composer')->resolve();
 
-        require $this->getRootDir(false) . '/vendor/composer/autoload_static.php';
-        require $this->getRootDir(false) . '/vendor/composer/autoload_real.php';
-        $this->autoload = require $this->getRootDir(false) . '/vendor/autoload.php';
+        require $this->getRootDir(false).'/vendor/composer/autoload_static.php';
+        require $this->getRootDir(false).'/vendor/composer/autoload_real.php';
+        $this->autoload = require $this->getRootDir(false).'/vendor/autoload.php';
 
         $pluginManager->initPlugins();
     }
