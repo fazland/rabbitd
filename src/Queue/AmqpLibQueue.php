@@ -91,5 +91,6 @@ class AmqpLibQueue
     public function setExchange($name, $type)
     {
         $this->channel->exchange_declare($name, $type);
+        $this->channel->queue_bind($this->queue, $name);
     }
 }
