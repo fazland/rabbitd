@@ -61,7 +61,6 @@ class AmqpLibQueue
     public function __destruct()
     {
         $this->channel->close();
-        $this->connection->close();
     }
 
     public function runLoop()
