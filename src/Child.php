@@ -69,6 +69,10 @@ class Child
         $connection = $this->connectionManager->getConnection($this->options['connection']);
         $this->queue = new AmqpLibQueue($this->logger, $connection, $this->options['queue_name']);
 
+        if ($this->options['exchange']) {
+            $this->queue->setExchange($this->options['exchange']['name'], $this->options['exchange']['type']);
+        }
+
         $this->eventDispatcher->dispatch(Events::CHILD_START, new ChildStartEvent($this));
         $this->logger->info('Started. Waiting for jobs...');
 

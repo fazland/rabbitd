@@ -104,6 +104,11 @@ class AmqpLibQueue
         $msg->delivery_info['channel']->basic_ack($msg->delivery_info['delivery_tag']);
     }
 
+    public function setExchange($name, $type)
+    {
+        $this->channel->exchange_declare($name, $type);
+    }
+
     public function setSymfonyConsoleApp($console)
     {
         $this->symfony_app = $console;
