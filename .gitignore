@@ -4,3 +4,4 @@ rabbitd.yml
 rabbitd.pid
 rabbitd.log
 composer.lock
+/plugins
