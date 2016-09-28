@@ -31,6 +31,7 @@ class Configuration implements ConfigurationInterface
         $root = $treeBuilder->root('configuration');
 
         $root
+            ->ignoreExtraKeys(true)
             ->children()
                 ->scalarNode('log_file')
                     ->info('Log filepath')

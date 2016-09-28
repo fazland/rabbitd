@@ -1,4 +1,12 @@
 services:
+    kernel:
+        class: Fazland\Rabbitd\Application\Kernel
+        synthetic: true
+
+    environment:
+        class: Fazland\Rabbitd\Console\Environment
+        synthetic: true
+
     event_dispatcher:
         class: Symfony\Component\EventDispatcher\EventDispatcher
 

@@ -7,7 +7,10 @@ use Fazland\Rabbitd\OutputFormatter\LogFormatter;
 use Fazland\Rabbitd\Util\ClassUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
+use Symfony\Component\Console\Helper\HelperSet;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -43,7 +46,7 @@ class PluginManager
         $this->pluginsDir = $pluginsDir;
     }
 
-    public function addComposerDependencies()
+    public function runComposer(InputInterface $input, OutputInterface $output, HelperSet $helperSet)
     {
         if (! file_exists($this->pluginsDir)) {
             return;
@@ -62,6 +65,8 @@ class PluginManager
 
             $this->composer->addPackage($composerPath);
         }
+
+        $this->composer->resolve($input, $output, $helperSet);
     }
 
     public function initPlugins()
@@ -72,13 +77,26 @@ class PluginManager
             ->in($this->pluginsDir)
             ->depth('== 1');
 
+        $warned = false;
+
         foreach ($finder as $file) {
             $className = ClassUtils::getClassName($file->getContents());
             if (empty($className)) {
                 continue;
             }
 
-            $reflClass = new \ReflectionClass($className);
+            try {
+                $reflClass = new \ReflectionClass($className);
+            } catch (\ReflectionException $e) {
+                // Autoload not ok. User should run the update-plugins command
+                if (! $warned) {
+                    $this->logger->warning('Exception while loading "'.$className.'". Probably you should run the "update-plugins" command');
+                    $warned = true;
+                }
+
+                continue;
+            }
+
             if (! $reflClass->implementsInterface(PluginInterface::class)) {
                 continue;
             }
