@@ -2,6 +2,7 @@
 
 namespace Fazland\Rabbitd\Command;
 
+use Fazland\Rabbitd\Events\Events;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -27,6 +28,7 @@ class RunCommand extends Command implements ContainerAwareInterface
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->container->get('event_dispatcher')->dispatch(Events::PRE_START);
         $this->container->get('application.master')->run();
     }
 }
