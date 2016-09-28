@@ -30,6 +30,7 @@ class Kernel
     {
         $this->container->setParameter('application.root_dir', $this->getRootDir(false));
         $this->container->setParameter('application.root_uri', $this->getRootDir(true));
+        $this->container->set('kernel', $this);
     }
 
     public function configure(array $configuration)
@@ -69,6 +70,17 @@ class Kernel
         return $this->container;
     }
 
+    /**
+     * @return Configuration
+     */
+    public function createConfiguration()
+    {
+        $pluginManager = $this->container->get('application.plugin_manager');
+        $configuration = new Configuration($pluginManager);
+
+        return $configuration;
+    }
+
     protected function createContainerBuilder()
     {
         return new ContainerBuilder();
@@ -85,14 +97,6 @@ class Kernel
         }
 
         return $dir;
-    }
-
-    protected function createConfiguration()
-    {
-        $pluginManager = $this->container->get('application.plugin_manager');
-        $configuration = new Configuration($pluginManager);
-
-        return $configuration;
     }
 
     private function initPlugins()
