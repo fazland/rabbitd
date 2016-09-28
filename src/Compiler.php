@@ -12,6 +12,11 @@ class Compiler
      */
     private $phar;
 
+    /**
+     * @var string
+     */
+    private $file;
+
     public function __construct()
     {
         $this->file = __DIR__.'/../build/rabbitd.phar';

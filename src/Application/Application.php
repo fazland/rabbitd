@@ -34,13 +34,6 @@ class Application extends BaseApplication implements ContainerAwareInterface
 
     /**
      * Finds and registers Commands.
-     *
-     * Override this method if your bundle commands do not follow the conventions:
-     *
-     * * Commands are in the 'Command' sub-directory
-     * * Commands extend Symfony\Component\Console\Command\Command
-     *
-     * @param Application $application An Application instance
      */
     public function registerCommands()
     {
