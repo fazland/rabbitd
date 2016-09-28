@@ -77,14 +77,7 @@ class Child
         $this->logger->info('Started. Waiting for jobs...');
 
         while ($this->running) {
-            try {
-                $this->queue->runLoop();
-            } catch (\Exception $e) {
-                $this->logger->critical('Uncaugth exception '.get_class($e).': '.$e->getMessage());
-                $this->logger->critical($e->getTraceAsString());
-                $this->running = false;
-            }
-
+            $this->queue->runLoop();
             $this->eventDispatcher->dispatch(Events::CHILD_EVENT_LOOP);
         }
 

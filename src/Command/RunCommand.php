@@ -28,6 +28,8 @@ class RunCommand extends Command implements ContainerAwareInterface
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->getApplication()->setCatchExceptions(false);
+
         $this->container->get('event_dispatcher')->dispatch(Events::PRE_START);
         $this->container->get('application.master')->run();
     }
