@@ -2,6 +2,7 @@
 
 namespace Fazland\Rabbitd\Plugin;
 
+use Fazland\Rabbitd\Application\Application;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -32,4 +33,10 @@ interface PluginInterface
      * @return
      */
     public function onStart(ContainerBuilder $container);
+
+    /**
+     * Finds and registers Commands.
+     * @param Application $application
+     */
+    public function registerCommands(Application $application);
 }

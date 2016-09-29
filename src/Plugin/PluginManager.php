@@ -2,6 +2,7 @@
 
 namespace Fazland\Rabbitd\Plugin;
 
+use Fazland\Rabbitd\Application\Application;
 use Fazland\Rabbitd\Composer\Composer;
 use Fazland\Rabbitd\OutputFormatter\LogFormatter;
 use Fazland\Rabbitd\Util\ClassUtils;
@@ -103,6 +104,13 @@ class PluginManager
 
             $plugin = $reflClass->newInstance();
             $this->plugins[] = $plugin;
+        }
+    }
+
+    public function registerCommands(Application $application)
+    {
+        foreach ($this->plugins as $plugin) {
+            $plugin->registerCommands($application);
         }
     }
 

@@ -41,23 +41,35 @@ class Application extends BaseApplication implements ContainerAwareInterface
         $finder = new Finder();
         $finder->files()->name('*Command.php')->in(__DIR__.'/../Command');
 
-        $prefix = 'Fazland\\Rabbitd\\Command';
+        $this->processCommandFiles($finder, 'Fazland\\Rabbitd\\Command');
+        $this->container->get('application.plugin_manager')->registerCommands($this);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function add(Command $command)
+    {
+        if ($command instanceof ContainerAwareInterface) {
+            $command->setContainer($this->container);
+        }
+
+        return parent::add($command);
+    }
+
+    public function processCommandFiles(Finder $finder, $prefix)
+    {
         foreach ($finder as $file) {
             $ns = $prefix;
             if ($relativePath = $file->getRelativePath()) {
-                $ns .= '\\'.str_replace('/', '\\', $relativePath);
+                $ns .= '\\' . str_replace('/', '\\', $relativePath);
             }
 
-            $class = $ns.'\\'.$file->getBasename('.php');
+            $class = $ns . '\\' . $file->getBasename('.php');
 
             $r = new \ReflectionClass($class);
             if ($r->isSubclassOf(Command::class) && !$r->isAbstract() && !$r->getConstructor()->getNumberOfRequiredParameters()) {
-                $command = $r->newInstance();
-                if ($command instanceof ContainerAwareInterface) {
-                    $command->setContainer($this->container);
-                }
-
-                $this->add($command);
+                $this->add($r->newInstance());
             }
         }
     }
