@@ -12,7 +12,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class TraceableEventDispatcherSetterPass implements CompilerPassInterface
 {
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function process(ContainerBuilder $container)
     {

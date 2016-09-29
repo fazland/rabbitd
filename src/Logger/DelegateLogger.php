@@ -27,7 +27,7 @@ class DelegateLogger implements LoggerInterface
         $this->delegate = $delegate;
     }
 
-    public function log($level, $message, array $context = array())
+    public function log($level, $message, array $context = [])
     {
         if (null === $this->delegate) {
             return;

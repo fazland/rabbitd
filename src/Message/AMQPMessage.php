@@ -23,7 +23,7 @@ class AMQPMessage extends BaseMessage implements MessageInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function sendAcknowledged()
     {

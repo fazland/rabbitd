@@ -46,7 +46,7 @@ class Application extends BaseApplication implements ContainerAwareInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function add(Command $command)
     {
@@ -62,10 +62,10 @@ class Application extends BaseApplication implements ContainerAwareInterface
         foreach ($finder as $file) {
             $ns = $prefix;
             if ($relativePath = $file->getRelativePath()) {
-                $ns .= '\\' . str_replace('/', '\\', $relativePath);
+                $ns .= '\\'.str_replace('/', '\\', $relativePath);
             }
 
-            $class = $ns . '\\' . $file->getBasename('.php');
+            $class = $ns.'\\'.$file->getBasename('.php');
 
             $r = new \ReflectionClass($class);
             if ($r->isSubclassOf(Command::class) && !$r->isAbstract() && !$r->getConstructor()->getNumberOfRequiredParameters()) {
