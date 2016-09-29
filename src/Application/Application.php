@@ -2,6 +2,7 @@
 
 namespace Fazland\Rabbitd\Application;
 
+use Fazland\Rabbitd\Exception\RestartException;
 use Fazland\Rabbitd\Util\ErrorHandlerUtil;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Command\Command;
@@ -91,6 +92,18 @@ class Application extends BaseApplication implements ContainerAwareInterface
         $this->registerCommands();
 
         return parent::doRun($input, $output);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function doRunCommand(Command $command, InputInterface $input, OutputInterface $output)
+    {
+        try {
+            return parent::doRunCommand($command, $input, $output);
+        } catch (RestartException $e) {
+            return 0;
+        }
     }
 
     protected function getDefaultInputDefinition()

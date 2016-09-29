@@ -1,0 +1,50 @@
+services:
+    application.in_execution_checker:
+        class: Fazland\Rabbitd\EventListener\AlreadyInExecutionChecker
+        arguments:
+            - '%pid_file%'
+            - '@process'
+        public: false
+        tags:
+            - { name: event_subscriber }
+
+    application.output_redictor:
+        class: Fazland\Rabbitd\EventListener\OutputRedirector
+        arguments:
+            - '%log_file%'
+            - '%verbosity%'
+        public: false
+        tags:
+            - { name: event_subscriber }
+
+    application.process_title_changer:
+        class: Fazland\Rabbitd\EventListener\ProcessTitleChanger
+        arguments:
+            - '@process'
+        public: false
+        tags:
+            - { name: event_subscriber }
+
+    application.signal_dispatcher:
+        class: Fazland\Rabbitd\EventListener\SignalDispatcher
+        public: false
+        tags:
+            - { name: event_subscriber }
+
+    application.master_loop_child_checker:
+        class: Fazland\Rabbitd\EventListener\MasterLoopChecker
+        public: false
+        arguments:
+            - '@application.master'
+        tags:
+            - { name: event_subscriber }
+
+    application.restarter:
+        class: Fazland\Rabbitd\EventListener\ApplicationRestarter
+        arguments:
+            - '@process'
+            - '@environment'
+            - '@logger'
+        public: false
+        tags:
+            - { name: event_subscriber }

@@ -34,4 +34,9 @@ class Environment
 
         return $this->env[$name];
     }
+
+    public function all()
+    {
+        return $this->env;
+    }
 }

@@ -1,0 +1,12 @@
+services:
+    kernel:
+        class: Fazland\Rabbitd\Application\Kernel
+        synthetic: true
+
+    environment:
+        class: Fazland\Rabbitd\Console\Environment
+        synthetic: true
+
+    application.console_logger:
+        class: Psr\Log\LoggerInterface
+        synthetic: true

@@ -1,0 +1,56 @@
+services:
+    logger:
+        class: Fazland\Rabbitd\Logger\DelegateLogger
+
+    application.output_factory:
+        class: Fazland\Rabbitd\Console\OutputFactory
+        arguments:
+            - '%verbosity%'
+        public: false
+
+    application.application_output_formatter:
+        class: Fazland\Rabbitd\OutputFormatter\LogFormatter
+        arguments:
+            - 'application'
+        public: false
+
+    application.stream_output:
+        class: Symfony\Component\Console\Output\StreamOutput
+        factory: ['@application.output_factory', 'factory']
+        arguments:
+            - '%log_file%'
+        calls:
+            - ['setFormatter', ['@application.application_output_formatter']]
+        public: false
+
+    application.stream_logger:
+        class: Symfony\Component\Console\Logger\ConsoleLogger
+        arguments:
+            - '@application.stream_output'
+            - []
+            -
+                warning: 'comment'
+
+    application.master_output_formatter:
+        class: Fazland\Rabbitd\OutputFormatter\LogFormatter
+        arguments:
+            - 'master'
+        public: false
+
+    application.master_output:
+        class: Symfony\Component\Console\Output\StreamOutput
+        factory: ['@application.output_factory', 'factory']
+        arguments:
+            - '%log_file%'
+        calls:
+            - ['setFormatter', ['@application.master_output_formatter']]
+        public: false
+
+    application.master_logger:
+        class: Symfony\Component\Console\Logger\ConsoleLogger
+        arguments:
+            - '@application.master_output'
+            - []
+            -
+                warning: 'comment'
+        public: false
