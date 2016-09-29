@@ -4,6 +4,7 @@ namespace Fazland\Rabbitd\Application;
 
 use Fazland\Rabbitd\DependencyInjection\CompilerPass\ConnectionCreator;
 use Fazland\Rabbitd\DependencyInjection\CompilerPass\EventListenerPass;
+use Fazland\Rabbitd\DependencyInjection\CompilerPass\TraceableEventDispatcherSetterPass;
 use Fazland\Rabbitd\DependencyInjection\CompilerPass\VerbosityNormalizer;
 use Fazland\Rabbitd\DependencyInjection\Configuration;
 use Fazland\Rabbitd\Util\Silencer;
@@ -54,6 +55,7 @@ class Kernel
         $this->container
             ->addCompilerPass(new ConnectionCreator())
             ->addCompilerPass(new VerbosityNormalizer())
+            ->addCompilerPass(new TraceableEventDispatcherSetterPass())
             ->addCompilerPass(new EventListenerPass(), PassConfig::TYPE_OPTIMIZE);
 
         Silencer::call('mkdir', dirname($this->container->getParameter('log_file')), 0777, true);

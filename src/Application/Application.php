@@ -2,6 +2,7 @@
 
 namespace Fazland\Rabbitd\Application;
 
+use Fazland\Rabbitd\Util\ErrorHandlerUtil;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -66,11 +67,14 @@ class Application extends BaseApplication implements ContainerAwareInterface
      */
     public function doRun(InputInterface $input, OutputInterface $output)
     {
-        $this->container->set('application.console_logger', new ConsoleLogger($output));
+        $this->container->set('application.console_logger', $logger = new ConsoleLogger($output));
         $this->kernel->boot();
 
         $this->kernel->configure($this->readConfigurationFile($input));
         $this->setDispatcher($this->container->get('event_dispatcher'));
+
+        $this->container->get('logger')->setLogger($logger);
+        ErrorHandlerUtil::setLogger($this->container->get('logger'));
 
         $this->registerCommands();
 

@@ -2,7 +2,7 @@
 
 namespace Fazland\Rabbitd\Events;
 
-use PhpAmqpLib\Message\AMQPMessage;
+use Fazland\Rabbitd\Message\MessageInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 class MessageEvent extends Event
@@ -13,11 +13,11 @@ class MessageEvent extends Event
     private $processed = false;
 
     /**
-     * @var AMQPMessage
+     * @var MessageInterface
      */
     private $message;
 
-    public function __construct(AMQPMessage $message)
+    public function __construct(MessageInterface $message)
     {
         $this->message = $message;
     }
@@ -43,7 +43,7 @@ class MessageEvent extends Event
     }
 
     /**
-     * @return AMQPMessage
+     * @return MessageInterface
      */
     public function getMessage()
     {

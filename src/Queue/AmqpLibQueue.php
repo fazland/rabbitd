@@ -4,10 +4,13 @@ namespace Fazland\Rabbitd\Queue;
 
 use Fazland\Rabbitd\Events\Events;
 use Fazland\Rabbitd\Events\MessageEvent;
+use Fazland\Rabbitd\Exception\MessageHandlerException;
+use Fazland\Rabbitd\Exception\MessageUnprocessedException;
+use Fazland\Rabbitd\Message\AMQPMessage;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Exception\AMQPIOWaitException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
-use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Message\AMQPMessage as BaseMessage;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -75,16 +78,21 @@ class AmqpLibQueue
         }
     }
 
-    public function processMessage(AMQPMessage $msg)
+    public function processMessage(BaseMessage $msg)
     {
-        $this->logger->debug('Received '.$msg->body);
+        $msg = AMQPMessage::wrap($msg);
+        $this->logger->debug('Received '.$msg->getBody());
 
-        $this->eventDispatcher->dispatch(Events::MESSAGE_RECEIVED, $event = new MessageEvent($msg));
+        try {
+            $this->eventDispatcher->dispatch(Events::MESSAGE_RECEIVED, $event = new MessageEvent($msg));
+        } catch (\Exception $exception) {
+            throw new MessageHandlerException($msg, 'Exception thrown while processing message', 0, $exception);
+        }
 
         if ($event->isProcessed()) {
-            $msg->delivery_info['channel']->basic_ack($msg->delivery_info['delivery_tag']);
+            $msg->sendAcknowledged();
         } else {
-            throw new \Exception('Message left unprocessed. See log for details');
+            throw new MessageUnprocessedException($msg, 'Message left unprocessed. See log for details');
         }
     }
 

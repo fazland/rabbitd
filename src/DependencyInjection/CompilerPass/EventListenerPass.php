@@ -13,7 +13,7 @@ class EventListenerPass implements CompilerPassInterface
      */
     public function process(ContainerBuilder $container)
     {
-        $dispatcher = $container->getDefinition('event_dispatcher');
+        $dispatcher = $container->findDefinition('event_dispatcher');
 
         foreach ($container->findTaggedServiceIds('event_listener') as $serviceId => $tags) {
             foreach ($tags as $tag) {

@@ -7,6 +7,13 @@ services:
         class: Fazland\Rabbitd\Console\Environment
         synthetic: true
 
+    application.console_logger:
+        class: Psr\Log\LoggerInterface
+        synthetic: true
+
+    logger:
+        class: Fazland\Rabbitd\Logger\DelegateLogger
+
     event_dispatcher:
         class: Symfony\Component\EventDispatcher\EventDispatcher
 
@@ -22,9 +29,28 @@ services:
             - '%verbosity%'
         public: false
 
-    application.console_logger:
-        class: Psr\Log\LoggerInterface
-        synthetic: true
+    application.application_output_formatter:
+        class: Fazland\Rabbitd\OutputFormatter\LogFormatter
+        arguments:
+            - 'application'
+        public: false
+
+    application.stream_output:
+        class: Symfony\Component\Console\Output\StreamOutput
+        factory: ['@application.output_factory', 'factory']
+        arguments:
+            - '%log_file%'
+        calls:
+            - ['setFormatter', ['@application.application_output_formatter']]
+        public: false
+
+    application.stream_logger:
+        class: Symfony\Component\Console\Logger\ConsoleLogger
+        arguments:
+            - '@application.stream_output'
+            - []
+            -
+                warning: 'comment'
 
     application.master_output_formatter:
         class: Fazland\Rabbitd\OutputFormatter\LogFormatter
@@ -116,5 +142,5 @@ services:
         class: Fazland\Rabbitd\Plugin\PluginManager
         arguments:
             - '@application.plugin_manager.composer'
-            - '@application.console_logger'
+            - '@logger'
             - '%plugins_dir%'

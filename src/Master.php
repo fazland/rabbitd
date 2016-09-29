@@ -50,6 +50,7 @@ class Master implements ContainerAwareInterface
     public function run()
     {
         $this->daemonize();
+        $this->container->get('logger')->setLogger($this->container->get('application.stream_logger'));
         $this->logger->info('Starting...');
 
         $this->eventDispatcher->dispatch(Events::START);
