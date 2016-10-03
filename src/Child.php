@@ -84,7 +84,6 @@ class Child
         while ($this->running) {
             $this->queue->runLoop();
             $this->eventDispatcher->dispatch(Events::CHILD_EVENT_LOOP);
-            $this->logger->debug('Loop event...');
         }
 
         $this->logger->info('Dying...');

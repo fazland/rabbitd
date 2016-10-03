@@ -55,7 +55,7 @@ class Kernel
         $this->container
             ->addCompilerPass(new ConnectionCreator())
             ->addCompilerPass(new VerbosityNormalizer())
-            ->addCompilerPass(new TraceableEventDispatcherSetterPass())
+//            ->addCompilerPass(new TraceableEventDispatcherSetterPass())
             ->addCompilerPass(new EventListenerPass(), PassConfig::TYPE_OPTIMIZE);
 
         Silencer::call('mkdir', dirname($this->container->getParameter('log_file')), 0777, true);
