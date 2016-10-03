@@ -1,5 +1,7 @@
 imports:
-    - { resource: services/ }
+    - { resource: services/listeners.yml }
+    - { resource: services/logging.yml }
+    - { resource: services/synthetics.yml }
 
 services:
     event_dispatcher:

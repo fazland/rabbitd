@@ -95,10 +95,10 @@ class Kernel
         }
 
         if (empty($dir)) {
-            $dir = realpath(__DIR__.'/../..');
+            $dir = __DIR__.'/../..';
         }
 
-        return $dir;
+        return realpath($dir);
     }
 
     private function initPlugins()

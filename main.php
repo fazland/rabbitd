@@ -9,8 +9,10 @@ if (class_exists('Phar')) {
 }
 
 if (empty($dir)) {
-    $dir = realpath(posix_getcwd());
+    $dir = posix_getcwd();
 }
+
+$dir = realpath($dir);
 
 if (file_exists($dir.'/vendor/autoload.php')) {
     $loader = require $dir.'/vendor/autoload.php';
