@@ -133,8 +133,12 @@ class Application extends BaseApplication implements ContainerAwareInterface
     private function readConfigurationFile(InputInterface $input)
     {
         $path = $input->getParameterOption(['--config', '-c'], $this->getDefaultConfigurationFilePath());
-        $content = file_get_contents($path);
+        if (file_exists($path)) {
+            $content = file_get_contents($path);
 
-        return ['configuration' => Yaml::parse($content)];
+            return ['configuration' => Yaml::parse($content)];
+        }
+
+        return ['configuration' => []];
     }
 }
