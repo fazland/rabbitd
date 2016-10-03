@@ -14,7 +14,7 @@ use PhpAmqpLib\Message\AMQPMessage as BaseMessage;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-class AmqpLibQueue
+class AmqpLibQueue implements QueueInterface
 {
     /**
      * @var LoggerInterface
@@ -90,15 +90,38 @@ class AmqpLibQueue
         }
 
         if ($event->isProcessed()) {
-            $msg->sendAcknowledged();
+            $this->postProcess($msg);
         } else {
             throw new MessageUnprocessedException($msg, 'Message left unprocessed. See log for details');
         }
+
+        $this->eventDispatcher->dispatch(Events::MESSAGE_PROCESSED, new MessageEvent($msg));
+    }
+
+    public function publishMessage($data)
+    {
+        $message = new AMQPMessage($data, ['delivery_mode' => 2]);
+        $this->channel->basic_publish($message, '', $this->queue);
     }
 
     public function setExchange($name, $type)
     {
         $this->channel->exchange_declare($name, $type);
         $this->channel->queue_bind($this->queue, $name);
+    }
+
+    public function getName()
+    {
+        return $this->queue;
+    }
+
+    /**
+     * @param AMQPMessage $msg
+     */
+    private function postProcess(AMQPMessage $msg)
+    {
+        if ($msg->needsAck()) {
+            $msg->sendAcknowledged();
+        }
     }
 }

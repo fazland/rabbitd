@@ -14,7 +14,6 @@ use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Finder\Finder;
 
@@ -128,32 +127,29 @@ class PluginManager
         foreach ($this->plugins as $plugin) {
             $this->logger->info('Starting plugin "'.$plugin->getName().'"...');
 
+            $container->setParameter(sprintf('rabbitd.plugins.%s.root_dir', $plugin->getName()), $plugin->getPath());
+
             $formatterId = sprintf('rabbitd.plugins.%s.formatter', $plugin->getName());
-            $formatter = new Definition(LogFormatter::class);
-            $formatter->setArguments([
-                'plugins - '.$plugin->getName(),
-            ]);
-
             $outputId = sprintf('rabbitd.plugins.%s.output', $plugin->getName());
-            $output = new Definition(StreamOutput::class);
-            $output->setFactory([new Reference('application.output_factory'), 'factory']);
-            $output->setArguments([
-                $container->getParameter('log_file'),
-            ]);
-            $output->addMethodCall('setFormatter', [new Reference($formatterId)]);
 
-            $logger = new Definition(ConsoleLogger::class);
-            $logger->setArguments([
-                new Reference($outputId),
-                [],
-                [
-                    'warning' => 'comment',
-                ],
-            ]);
+            $container->register($formatterId, LogFormatter::class)
+                ->setArguments(['plugins - '.$plugin->getName()]);
 
-            $container->setDefinition($formatterId, $formatter);
-            $container->setDefinition($outputId, $output);
-            $container->setDefinition(sprintf('rabbitd.plugins.%s.logger', $plugin->getName()), $logger);
+            $container->register($outputId, StreamOutput::class)
+                ->setFactory([new Reference('application.output_factory'), 'factory'])
+                ->setArguments([
+                    $container->getParameter('log_file'),
+                ])
+                ->addMethodCall('setFormatter', [new Reference($formatterId)]);
+
+            $container->register(sprintf('rabbitd.plugins.%s.logger', $plugin->getName()), ConsoleLogger::class)
+                ->setArguments([
+                    new Reference($outputId),
+                    [],
+                    [
+                        'warning' => 'comment',
+                    ],
+                ]);
 
             $plugin->onStart($container);
         }

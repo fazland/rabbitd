@@ -39,4 +39,11 @@ interface PluginInterface
      * @param Application $application
      */
     public function registerCommands(Application $application);
+
+    /**
+     * Get the plugin root path
+     *
+     * @return string
+     */
+    public function getPath();
 }

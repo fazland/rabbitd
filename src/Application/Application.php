@@ -95,6 +95,14 @@ class Application extends BaseApplication implements ContainerAwareInterface
     }
 
     /**
+     * @return Kernel
+     */
+    public function getKernel()
+    {
+        return $this->kernel;
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function doRunCommand(Command $command, InputInterface $input, OutputInterface $output)

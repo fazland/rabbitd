@@ -24,6 +24,7 @@
         "symfony/options-resolver": "^3.0",
         "symfony/polyfill": "^1.2",
         "symfony/process": "^3.0",
+        "symfony/stopwatch": "^3.0",
         "symfony/yaml": "^3.0"
     },
     "require-dev": {

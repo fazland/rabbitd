@@ -7,6 +7,7 @@ use Fazland\Rabbitd\Events\ChildStartEvent;
 use Fazland\Rabbitd\Events\Events;
 use Fazland\Rabbitd\Process\Process;
 use Fazland\Rabbitd\Queue\AmqpLibQueue;
+use Fazland\Rabbitd\Queue\QueueInterface;
 use Fazland\Rabbitd\Util\ErrorHandlerUtil;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -29,7 +30,7 @@ class Child
     private $process;
 
     /**
-     * @var AmqpLibQueue
+     * @var QueueInterface
      */
     private $queue;
 
@@ -67,6 +68,10 @@ class Child
         ErrorHandlerUtil::setLogger($this->logger);
 
         $connection = $this->connectionManager->getConnection($this->options['connection']);
+        if ($connection->isConnected()) {
+            $connection->reconnect();
+        }
+
         $this->queue = new AmqpLibQueue($this->logger, $connection, $this->options['queue_name'], $this->eventDispatcher);
 
         if (!empty($this->options['exchange'])) {
@@ -79,6 +84,7 @@ class Child
         while ($this->running) {
             $this->queue->runLoop();
             $this->eventDispatcher->dispatch(Events::CHILD_EVENT_LOOP);
+            $this->logger->debug('Loop event...');
         }
 
         $this->logger->info('Dying...');
@@ -86,7 +92,7 @@ class Child
     }
 
     /**
-     * @return AmqpLibQueue
+     * @return QueueInterface
      */
     public function getQueue()
     {

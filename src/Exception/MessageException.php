@@ -2,26 +2,26 @@
 
 namespace Fazland\Rabbitd\Exception;
 
-use PhpAmqpLib\Message\AMQPMessage;
+use Fazland\Rabbitd\Message\MessageInterface;
 
 abstract class MessageException extends \RuntimeException
 {
     /**
-     * @var AMQPMessage
+     * @var MessageInterface
      */
-    private $AMQPMessage;
+    private $queueMessage;
 
-    public function __construct(AMQPMessage $AMQPMessage, $message = '', $code = 0, \Exception $previous = null)
+    public function __construct(MessageInterface $queueMessage, $message = '', $code = 0, \Exception $previous = null)
     {
-        $this->AMQPMessage = $AMQPMessage;
+        $this->queueMessage = $queueMessage;
         parent::__construct($message, $code, $previous);
     }
 
     /**
-     * @return AMQPMessage
+     * @return MessageInterface
      */
-    public function getAMQPMessage()
+    public function getQueueMessage()
     {
-        return $this->AMQPMessage;
+        return $this->queueMessage;
     }
 }

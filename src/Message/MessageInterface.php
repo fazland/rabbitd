@@ -17,4 +17,14 @@ interface MessageInterface
      * @return string
      */
     public function getBody();
+
+    /**
+     * @return bool
+     */
+    public function needsAck();
+
+    /**
+     * @param bool $needAck
+     */
+    public function setNeedAck($needAck);
 }

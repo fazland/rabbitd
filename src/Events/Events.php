@@ -12,6 +12,5 @@ class Events
     const CHILD_START = 'child.start';
     const CHILD_EVENT_LOOP = 'child.loop';
     const MESSAGE_RECEIVED = 'message';
-
-    const ERROR = 'application.error';
+    const MESSAGE_PROCESSED = 'message.finished';
 }

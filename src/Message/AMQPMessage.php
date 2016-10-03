@@ -6,6 +6,8 @@ use PhpAmqpLib\Message\AMQPMessage as BaseMessage;
 
 class AMQPMessage extends BaseMessage implements MessageInterface
 {
+    private $needAck = true;
+
     /**
      * @param BaseMessage $message
      *
@@ -28,5 +30,21 @@ class AMQPMessage extends BaseMessage implements MessageInterface
     public function sendAcknowledged()
     {
         $this->delivery_info['channel']->basic_ack($this->delivery_info['delivery_tag']);
+    }
+
+    /**
+     * @return bool
+     */
+    public function needsAck()
+    {
+        return $this->needAck;
+    }
+
+    /**
+     * @param bool $needAck
+     */
+    public function setNeedAck($needAck)
+    {
+        $this->needAck = $needAck;
     }
 }

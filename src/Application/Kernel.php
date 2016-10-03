@@ -9,21 +9,14 @@ use Fazland\Rabbitd\DependencyInjection\CompilerPass\VerbosityNormalizer;
 use Fazland\Rabbitd\DependencyInjection\Configuration;
 use Fazland\Rabbitd\Util\Silencer;
 use Symfony\Component\Config\Definition\Processor;
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Config\Loader\DelegatingLoader;
-use Symfony\Component\Config\Loader\LoaderResolver;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\DependencyInjection\Loader\ClosureLoader;
-use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
-use Symfony\Component\DependencyInjection\Loader\IniFileLoader;
-use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 class Kernel
 {
+    use ContainerLoaderBuilderTrait;
+
     /**
      * @var ContainerBuilder
      */
@@ -50,7 +43,7 @@ class Kernel
         }
 
         $this->container->setParameter('plugins_dir', $pluginsDir);
-        $loader = $this->getContainerLoader($this->container);
+        $loader = $this->getContainerLoader($this->container, __DIR__.'/../Resources/config');
         $loader->load('services.yml');
 
         $this->initPlugins();
@@ -88,21 +81,6 @@ class Kernel
         $configuration = new Configuration($pluginManager);
 
         return $configuration;
-    }
-
-    protected function getContainerLoader(ContainerBuilder $container)
-    {
-        $locator = new FileLocator(__DIR__.'/../Resources/config');
-        $resolver = new LoaderResolver([
-            new XmlFileLoader($container, $locator),
-            new YamlFileLoader($container, $locator),
-            new IniFileLoader($container, $locator),
-            new PhpFileLoader($container, $locator),
-            new DirectoryLoader($container, $locator),
-            new ClosureLoader($container),
-        ]);
-
-        return new DelegatingLoader($resolver);
     }
 
     protected function createContainerBuilder()
