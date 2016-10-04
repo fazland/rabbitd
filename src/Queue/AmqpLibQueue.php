@@ -104,9 +104,9 @@ class AmqpLibQueue implements QueueInterface
         $this->channel->basic_publish($message, '', $this->queue);
     }
 
-    public function setExchange($name, $type)
+    public function setExchange($name, $type, $durable, $auto_delete)
     {
-        $this->channel->exchange_declare($name, $type);
+        $this->channel->exchange_declare($name, $type, $durable, $auto_delete);
         $this->channel->queue_bind($this->queue, $name);
     }
 

@@ -98,6 +98,8 @@ class Configuration implements ConfigurationInterface
                                         ->end()
                                         ->defaultValue('fanout')
                                     ->end()
+                                    ->booleanNode('durable')->defaultTrue()->end()
+                                    ->booleanNode('auto_delete')->defaultFalse()->end()
                                 ->end()
                             ->end()
                             ->arrayNode('worker')

@@ -75,7 +75,8 @@ class Child
         $this->queue = new AmqpLibQueue($this->logger, $connection, $this->options['queue_name'], $this->eventDispatcher);
 
         if (!empty($this->options['exchange'])) {
-            $this->queue->setExchange($this->options['exchange']['name'], $this->options['exchange']['type']);
+            $ex_options = $this->options['exchange'];
+            $this->queue->setExchange($ex_options['name'], $ex_options['type'], $ex_options['durable'], $ex_options['auto_delete']);
         }
 
         $this->eventDispatcher->dispatch(Events::CHILD_START, new ChildStartEvent($this));
