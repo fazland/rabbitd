@@ -5,3 +5,4 @@ filter:
     excluded_paths:
         - "tests/"
         - 'build.php'
+        - 'main.php'
