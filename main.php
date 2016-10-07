@@ -1,6 +1,7 @@
 <?php
 
 declare(ticks=1);
+define('AMQP_WITHOUT_SIGNALS', true);
 
 require __DIR__.'/vendor/autoload.php';
 
