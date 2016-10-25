@@ -9,6 +9,11 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class MasterLoopChecker implements EventSubscriberInterface
 {
     /**
+     * @var bool
+     */
+    public static $check = false;
+
+    /**
      * @var Master
      */
     private $master;
@@ -25,8 +30,9 @@ class MasterLoopChecker implements EventSubscriberInterface
 
     public function onLoop()
     {
-        if ($this->loopCount++ % 10 == 0) {
+        if ($this->loopCount++ % 10 == 0 || self::$check) {
             $this->master->sanityCheck();
+            self::$check = false;
         }
     }
 

@@ -2,12 +2,13 @@
 
 namespace Fazland\Rabbitd\Connection;
 
-use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Connection\AbstractConnection;
+use PhpAmqpLib\Connection\AMQPSocketConnection;
 
 class ConnectionManager
 {
     /**
-     * @var AMQPStreamConnection[]
+     * @var AbstractConnection[]
      */
     private $connections;
 
@@ -39,7 +40,7 @@ class ConnectionManager
 
         $parameters = $this->parameters[$name];
 
-        return $this->connections[$name] = new AMQPStreamConnection(
+        return $this->connections[$name] = new AMQPSocketConnection(
             $parameters['hostname'],
             $parameters['port'],
             $parameters['username'],

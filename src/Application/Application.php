@@ -19,17 +19,29 @@ class Application extends BaseApplication implements ContainerAwareInterface
 {
     use ContainerAwareTrait;
 
+    const VERSION = '0.1.0-dev';
+
     /**
      * @var Kernel
      */
     private $kernel;
 
-    public function __construct(Kernel $kernel)
+    /**
+     * @var CommandLocator
+     */
+    private $commandLocator;
+
+    public function __construct(Kernel $kernel, CommandLocator $commandLocator = null)
     {
+        if (null === $commandLocator) {
+            $commandLocator = new CommandLocator($this);
+        }
+
         $this->kernel = $kernel;
+        $this->commandLocator = $commandLocator;
         $this->setContainer($this->kernel->getContainer());
 
-        parent::__construct('Rabbitd', 'dev');
+        parent::__construct('Rabbitd', self::VERSION);
 
         $this->setDefaultCommand('run');
     }
@@ -39,10 +51,7 @@ class Application extends BaseApplication implements ContainerAwareInterface
      */
     public function registerCommands()
     {
-        $finder = new Finder();
-        $finder->files()->name('*Command.php')->in(__DIR__.'/../Command');
-
-        $this->processCommandFiles($finder, 'Fazland\\Rabbitd\\Command');
+        $this->commandLocator->register(__DIR__.'/../Command', 'Fazland\\Rabbitd\\Command');
         $this->container->get('application.plugin_manager')->registerCommands($this);
     }
 

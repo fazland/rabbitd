@@ -76,7 +76,7 @@ class Child
 
         if (!empty($this->options['exchange'])) {
             $ex_options = $this->options['exchange'];
-            $this->queue->setExchange($ex_options['name'], $ex_options['type'], $ex_options['durable'], $ex_options['auto_delete']);
+            $this->queue->setExchange($ex_options['name'], $ex_options['type'], $ex_options['durable'], $ex_options['auto_delete'], $ex_options['arguments']);
         }
 
         $this->eventDispatcher->dispatch(Events::CHILD_START, new ChildStartEvent($this));

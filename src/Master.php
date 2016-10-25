@@ -2,6 +2,7 @@
 
 namespace Fazland\Rabbitd;
 
+use Fazland\Rabbitd\EventListener\MasterLoopChecker;
 use Fazland\Rabbitd\Events\Events;
 use Fazland\Rabbitd\Exception\RestartException;
 use Fazland\Rabbitd\Util\ErrorHandlerUtil;
@@ -152,7 +153,9 @@ class Master implements ContainerAwareInterface
         pcntl_signal(SIGTERM, $handler);
         pcntl_signal(SIGHUP, $handler);
 
-        pcntl_signal(SIGCHLD, [$this, 'sanityCheck']);
+        pcntl_signal(SIGCHLD, function () {
+            MasterLoopChecker::$check = true;
+        });
     }
 
     private function signalTermination()

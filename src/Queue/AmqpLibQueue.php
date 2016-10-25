@@ -7,10 +7,11 @@ use Fazland\Rabbitd\Events\MessageEvent;
 use Fazland\Rabbitd\Exception\MessageHandlerException;
 use Fazland\Rabbitd\Exception\MessageUnprocessedException;
 use Fazland\Rabbitd\Message\AMQPMessage;
-use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Exception\AMQPIOWaitException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage as BaseMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -22,7 +23,7 @@ class AmqpLibQueue implements QueueInterface
     private $logger;
 
     /**
-     * @var AMQPStreamConnection
+     * @var AbstractConnection
      */
     private $connection;
 
@@ -45,11 +46,11 @@ class AmqpLibQueue implements QueueInterface
      * AmpqLibQueue constructor.
      *
      * @param LoggerInterface $logger
-     * @param AMQPStreamConnection $connection
+     * @param AbstractConnection $connection
      * @param string $queue
      * @param EventDispatcherInterface $eventDispatcher
      */
-    public function __construct(LoggerInterface $logger, AMQPStreamConnection $connection, $queue, EventDispatcherInterface $eventDispatcher)
+    public function __construct(LoggerInterface $logger, AbstractConnection $connection, $queue, EventDispatcherInterface $eventDispatcher)
     {
         $this->connection = $connection;
         $this->channel = $this->connection->channel();
@@ -104,9 +105,13 @@ class AmqpLibQueue implements QueueInterface
         $this->channel->basic_publish($message, '', $this->queue);
     }
 
-    public function setExchange($name, $type, $durable, $auto_delete)
+    public function setExchange($name, $type, $durable, $auto_delete, $arguments = null)
     {
-        $this->channel->exchange_declare($name, $type, $durable, $auto_delete);
+        if (null !== $arguments) {
+            $arguments = new AMQPTable($arguments);
+        }
+
+        $this->channel->exchange_declare($name, $type, false, $durable, $auto_delete, false, false, $arguments);
         $this->channel->queue_bind($this->queue, $name);
     }
 
