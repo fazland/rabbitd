@@ -17,16 +17,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Composer
 {
     /**
-     * @var Factory
-     */
-    private $factory;
-
-    /**
-     * @var Config
-     */
-    private $config;
-
-    /**
      * @var JsonFile
      */
     private $rootFile;
@@ -41,33 +31,42 @@ class Composer
      */
     private $rootUri;
 
-    public function __construct($rootUri)
+    /**
+     * @var string
+     */
+    private $rootPath;
+
+    public function __construct($rootUri, $rootPath)
     {
         ini_set('memory_limit', '2G');
-
-        $this->factory = new Factory();
-        $this->config = $this->factory->createConfig();
-
-        $this->rootFile = $this->getJson(__DIR__.'/../../composer.json');
-        $jsonConfigSource = new Config\JsonConfigSource($this->rootFile);
-
-        $this->config->setConfigSource($jsonConfigSource);
-        $this->config->merge($this->rootFile->read());
-        $this->config->merge([
-            'config' => ['autoloader-suffix' => md5(uniqid('', true))],
-        ]);
+        $this->rootUri = $rootUri;
+        $this->rootPath = $rootPath;
 
         $this->packages = [];
-        $this->rootUri = $rootUri;
     }
 
     public function resolve(InputInterface $input, OutputInterface $output, HelperSet $helperSet)
     {
+        $oldCwd = posix_getcwd();
+        chdir($this->rootPath);
+
+        $factory = new Factory();
+        $config = $factory->createConfig();
+
+        $this->rootFile = $this->getJson(__DIR__.'/../../composer.json');
+        $jsonConfigSource = new Config\JsonConfigSource($this->rootFile);
+
+        $config->setConfigSource($jsonConfigSource);
+        $config->merge($this->rootFile->read());
+        $config->merge([
+            'config' => ['autoloader-suffix' => md5(uniqid('', true))],
+        ]);
+
         $io = new ConsoleIO($input, $output, $helperSet);
-        $composer = $this->factory->createComposer($io, $this->config->all());
+        $composer = $factory->createComposer($io, $config->all());
         $rm = $composer->getRepositoryManager();
 
-        $loader = new RootPackageLoader($rm, $this->config);
+        $loader = new RootPackageLoader($rm, $config);
         $package = $loader->load($this->rootFile->read());
 
         $autoload = $package->getAutoload();
@@ -109,6 +108,8 @@ class Composer
         $installer->setUpdate();
 
         $installer->run();
+
+        chdir($oldCwd);
     }
 
     public function addPackage($composerJson)

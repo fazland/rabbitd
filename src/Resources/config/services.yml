@@ -34,6 +34,7 @@ services:
         class: Fazland\Rabbitd\Composer\Composer
         arguments:
             - '%application.root_uri%'
+            - '%application.root_dir%'
 
     application.plugin_manager:
         class: Fazland\Rabbitd\Plugin\PluginManager
