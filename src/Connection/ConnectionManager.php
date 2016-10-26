@@ -2,8 +2,8 @@
 
 namespace Fazland\Rabbitd\Connection;
 
+use Fazland\Rabbitd\PhpAmqpLib\Connection\AMQPSocketConnection;
 use PhpAmqpLib\Connection\AbstractConnection;
-use PhpAmqpLib\Connection\AMQPSocketConnection;
 
 class ConnectionManager
 {
