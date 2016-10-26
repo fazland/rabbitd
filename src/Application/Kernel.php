@@ -48,6 +48,9 @@ class Kernel
 
         $this->initPlugins();
 
+        $pluginManager = $this->container->get('application.plugin_manager');
+        $configuration['configuration'] = $pluginManager->getPrependedConfig($configuration['configuration']);
+
         $processor = new Processor();
         $conf = $processor->processConfiguration($this->createConfiguration(), $configuration);
 
@@ -60,7 +63,7 @@ class Kernel
 
         Silencer::call('mkdir', dirname($this->container->getParameter('log_file')), 0777, true);
 
-        $this->container->get('application.plugin_manager')->onStart($this->container);
+        $pluginManager->onStart($this->container);
         $this->container->compile();
     }
 

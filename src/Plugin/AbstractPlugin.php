@@ -41,6 +41,14 @@ abstract class AbstractPlugin implements PluginInterface
         $application->processCommandFiles($finder, $this->getNamespace().'\\Command');
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function prependConfiguration(array $configuration)
+    {
+        return [];
+    }
+
     public function getPath()
     {
         $reflectionClass = new \ReflectionClass($this);

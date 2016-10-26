@@ -154,4 +154,13 @@ class PluginManager
             $plugin->onStart($container);
         }
     }
+
+    public function getPrependedConfig(array $config)
+    {
+        foreach ($this->plugins as $plugin) {
+            $config = array_merge_recursive($plugin->prependConfiguration($config), $config);
+        }
+
+        return $config;
+    }
 }

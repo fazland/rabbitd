@@ -46,4 +46,14 @@ interface PluginInterface
      * @return string
      */
     public function getPath();
+
+    /**
+     * Get configuration values to be prepended when
+     * processing configuration file
+     *
+     * @param array $configuration Current configuration array (not validated!)
+     *
+     * @return array
+     */
+    public function prependConfiguration(array $configuration);
 }
