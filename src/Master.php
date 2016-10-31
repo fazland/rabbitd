@@ -128,7 +128,7 @@ class Master implements ContainerAwareInterface
                 $childName = $name.' #'.$i;
                 $child = $childrenFactory->createChild($childName, $options);
 
-                $this->children[$name] = $child;
+                $this->children[$childName] = $child;
             }
         }
     }

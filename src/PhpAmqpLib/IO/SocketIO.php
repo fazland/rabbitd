@@ -3,6 +3,7 @@
 namespace Fazland\Rabbitd\PhpAmqpLib\IO;
 
 use PhpAmqpLib\Wire\IO\SocketIO as BaseIO;
+use Symfony\Component\Debug\Exception\ContextErrorException;
 
 class SocketIO extends BaseIO
 {
@@ -12,6 +13,14 @@ class SocketIO extends BaseIO
         $write = null;
         $except = null;
 
-        return @socket_select($read, $write, $except, $sec, $usec);
+        try {
+            return socket_select($read, $write, $except, $sec, $usec);
+        } catch (ContextErrorException $e) {
+            if (strpos($e->getMessage(), 'Interrupted system call') !== false) {
+                return 0;
+            }
+
+            throw $e;
+        }
     }
 }
