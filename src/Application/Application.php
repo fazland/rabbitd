@@ -19,7 +19,7 @@ class Application extends BaseApplication implements ContainerAwareInterface
 {
     use ContainerAwareTrait;
 
-    const VERSION = '0.1.0-dev';
+    const VERSION = '0.0.6-alpha.6';
 
     /**
      * @var Kernel
