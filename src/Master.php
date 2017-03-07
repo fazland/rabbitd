@@ -57,6 +57,12 @@ class Master implements ContainerAwareInterface
         $this->eventDispatcher->dispatch(Events::START);
         ErrorHandlerUtil::setLogger($this->logger);
 
+        $masterOptions = $this->container->getParameter('master');
+
+        $currentProcess = $this->container->get('process');
+        $currentProcess->setUser($masterOptions['user']);
+        $currentProcess->setGroup($masterOptions['group']);
+
         $this->running = true;
 
         $this->installSignalHandlers();
@@ -105,10 +111,6 @@ class Master implements ContainerAwareInterface
     private function daemonize()
     {
         $currentProcess = $this->container->get('process');
-        $masterOptions = $this->container->getParameter('master');
-
-        $currentProcess->setUser($masterOptions['user']);
-        $currentProcess->setGroup($masterOptions['group']);
 
         // Double fork magic, to prevent daemon to acquire a tty
         if ($pid = $currentProcess->fork()) {
