@@ -105,6 +105,10 @@ class Master implements ContainerAwareInterface
     private function daemonize()
     {
         $currentProcess = $this->container->get('process');
+        $masterOptions = $this->container->getParameter('master');
+
+        $currentProcess->setUser($masterOptions['user']);
+        $currentProcess->setGroup($masterOptions['group']);
 
         // Double fork magic, to prevent daemon to acquire a tty
         if ($pid = $currentProcess->fork()) {

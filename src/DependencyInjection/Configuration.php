@@ -46,16 +46,6 @@ class Configuration implements ConfigurationInterface
                     ->values(['quiet', 'normal', 'verbose', 'very_verbose', 'debug'])
                     ->defaultValue('very_verbose')
                 ->end()
-                ->arrayNode('master')
-                    ->info('Master execution configuration')
-                    ->children()
-                        ->scalarNode('user')
-                            ->info('Change user of master process to')
-                            ->defaultValue('nobody')
-                        ->end()
-                        ->scalarNode('group')->defaultValue('nogroup')->end()
-                    ->end()
-                ->end()
                 ->scalarNode('plugins_dir')
                     ->info('Plugins base directory')
                     ->defaultValue('%application.root_dir%/plugins')
@@ -65,6 +55,7 @@ class Configuration implements ConfigurationInterface
 
         $this->addConnectionsNode($root);
         $this->addQueuesNode($root);
+        $this->addMasterNode($root);
 
         $this->pluginManager->addConfiguration($root);
 
@@ -72,6 +63,27 @@ class Configuration implements ConfigurationInterface
     }
 
     private function addQueuesNode(NodeDefinition $root)
+    {
+        $processUser = posix_getpwuid(posix_geteuid());
+        $processGroup = posix_getgrnam(posix_getegid());
+
+        $root
+            ->children()
+                ->arrayNode('master')
+                    ->info('Master execution configuration')
+                    ->children()
+                        ->scalarNode('user')
+                            ->info('Change user of master process to')
+                            ->defaultValue($processUser['name'])
+                        ->end()
+                        ->scalarNode('group')->defaultValue($processGroup)->end()
+                    ->end()
+                ->end()
+            ->end()
+        ;
+    }
+
+    private function addMasterNode(NodeDefinition $root)
     {
         $root
             ->children()
