@@ -29,9 +29,6 @@ queues:
             user: nobody                # Execute this child as
             group: nogroup
 
-# Symfony app executable
-symfony_app: /path/to/syfmony/app/console
-
 # Execution options
 master:
     user: root
