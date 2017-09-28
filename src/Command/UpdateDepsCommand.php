@@ -8,7 +8,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 
-class UpdatePluginsCommand extends Command implements ContainerAwareInterface
+class UpdateDepsCommand extends Command implements ContainerAwareInterface
 {
     use ContainerAwareTrait;
 
@@ -18,8 +18,9 @@ class UpdatePluginsCommand extends Command implements ContainerAwareInterface
     protected function configure()
     {
         $this
-            ->setName('update-plugins')
-            ->setDescription('Update dependencies and autoloader for plugins');
+            ->setName('update-deps')
+            ->setDescription('Update dependencies and autoloader')
+        ;
     }
 
     /**
