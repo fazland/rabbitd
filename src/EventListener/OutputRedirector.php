@@ -30,6 +30,10 @@ class OutputRedirector implements EventSubscriberInterface
         fclose(STDIN);
         $STDIN = fopen('/dev/null', 'r');
 
+        if (null === $this->logFile || '-' === $this->logFile) {
+            return;
+        }
+
         fclose(STDOUT);
         $handle = fopen($this->logFile, 'ab');       // This will be the new stdout since 1 is the lowest free file descriptor
         $STDOUT = $handle;
