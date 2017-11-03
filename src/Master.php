@@ -48,7 +48,7 @@ class Master implements ContainerAwareInterface
         $this->children = [];
     }
 
-    public function run()
+    public function run($daemonize = true)
     {
         $this->daemonize();
         $this->container->get('logger')->setLogger($this->container->get('application.stream_logger'));
