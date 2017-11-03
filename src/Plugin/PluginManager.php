@@ -88,9 +88,9 @@ class PluginManager
             try {
                 $reflClass = new \ReflectionClass($className);
             } catch (\ReflectionException $e) {
-                // Autoload not ok. User should run the update-plugins command
+                // Autoload not ok. User should run the update-deps command
                 if (! $warned) {
-                    $this->logger->warning('Exception while loading "'.$className.'". Probably you should run the "update-plugins" command');
+                    $this->logger->warning('Exception while loading "'.$className.'". Probably you should run the "update-deps" command');
                     $warned = true;
                 }
 

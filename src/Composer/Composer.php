@@ -10,6 +10,7 @@ use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
 use Composer\Package\Loader\RootPackageLoader;
 use Composer\Package\RootPackageInterface;
+use Composer\Repository\RepositoryManager;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -89,10 +90,14 @@ class Composer
 
             $additionalPackage = $loader->load($parsed);
             foreach ($additionalPackage->getRequires() as $name => $link) {
-                if (! isset($origin[$name])) {
-                    $origin[$name] = $link;
-                } else {
+                if (isset($origin[$name])) {
+                    if ($origin[$name] === $link) {
+                        continue;
+                    }
+
                     $origin[] = $link;
+                } else {
+                    $origin[$name] = $link;
                 }
             }
 
@@ -123,10 +128,6 @@ class Composer
         return new JsonFile($json, null, $io);
     }
 
-    /**
-     * @param RootPackageInterface $additionalPackage
-     * @param string $dirname
-     */
     private function mergeAutoload(RootPackageInterface $rootPackage, RootPackageInterface $additionalPackage, $dirname)
     {
         $rootAutoload = $rootPackage->getAutoload();

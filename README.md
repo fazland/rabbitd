@@ -1,5 +1,7 @@
 # rabbitd
 
+[![Build Status](https://travis-ci.org/fazland/rabbitd.svg?branch=master)](https://travis-ci.org/fazland/rabbitd)
+
 AMQP message processor daemon written in PHP
 
 ## Installation
