@@ -70,6 +70,7 @@ class Configuration implements ConfigurationInterface
         $root
             ->children()
                 ->arrayNode('master')
+                    ->addDefaultsIfNotSet()
                     ->info('Master execution configuration')
                     ->children()
                         ->scalarNode('user')
