@@ -33,6 +33,6 @@ class RunCommand extends Command implements ContainerAwareInterface
         $this->getApplication()->setCatchExceptions(false);
 
         $this->container->get('event_dispatcher')->dispatch(Events::PRE_START);
-        $this->container->get('application.master')->run($input->getOption('foreground'));
+        $this->container->get('application.master')->run(! $input->getOption('foreground'));
     }
 }
