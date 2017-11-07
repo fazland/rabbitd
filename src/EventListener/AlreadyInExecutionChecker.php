@@ -33,6 +33,10 @@ class AlreadyInExecutionChecker implements EventSubscriberInterface
             return;
         }
 
+        if (posix_getpid() === $pid) {
+            return;
+        }
+
         if (posix_kill($pid, 0)) {
             throw new \RuntimeException("Rabbitd is already running with PID #$pid");
         }
